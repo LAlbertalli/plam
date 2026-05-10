@@ -1,0 +1,9 @@
+{
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": [
+    "tests"
+  ],
+  "python.testing.cwd": "${workspaceFolder}/backend",
+  "python.defaultInterpreterPath": "${workspaceFolder}/backend/venv/bin/python",
+  "jest.rootPath": "frontend"
+}
