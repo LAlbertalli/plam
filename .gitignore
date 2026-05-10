@@ -1,0 +1,24 @@
+# General
+.DS_Store
+*.log
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.pytest_cache/
+alembic.ini.bak
+
+# Node
+node_modules/
+dist/
+.next/
+coverage/
+
+# IDE
+.vscode/
+!.vscode/launch.json
+.idea/

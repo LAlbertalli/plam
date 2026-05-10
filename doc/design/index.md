@@ -5,7 +5,8 @@ Welcome to the Personal Local Agent Manager (PLAM) design documentation.
 - [Design Overview](overview.md): High-level architecture and component relationships.
 - [Feature List](features.md): Comprehensive list of all planned capabilities.
 - [Database Schema](database_schema.md): Detailed relational data models.
-- [Implementation Plan](implementation_plan.md): Phased, parallel approach to building the system with design refinement steps.
+- [Implementation Plan](implementation_plan.md): Phased, parallel approach to building the system.
+- [Testing Strategy](testing_strategy.md): Frameworks and methodologies for backend and frontend testing.
 
 ## Components
 - [Backend Orchestrator](components/backend_orchestrator.md)
