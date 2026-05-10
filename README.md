@@ -1,5 +1,7 @@
+[![PLAM CI/CD Pipeline](https://github.com/LAlbertalli/plam/actions/workflows/test.yml/badge.svg)](https://github.com/LAlbertalli/plam/actions/workflows/test.yml)
 # Personal Local Agent Manager (PLAM)
 
+This is an AI project I'm building for myself to help me think deeper about agents and agents architecture. The inspiration comes from the idea of OpenClaw but I wanted to create something more in line with my beliefs and ideas.
 PLAM is a powerful, local-first multi-agent system designed to orchestrate local LLMs (via `llama.cpp`), manage hierarchical agents with complex memory systems, and execute code safely within isolated sandboxes.
 
 ## Key Features
