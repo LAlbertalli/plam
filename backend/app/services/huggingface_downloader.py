@@ -3,10 +3,9 @@ import logging
 from huggingface_hub import hf_hub_download
 from app.db.database import SessionLocal
 from app.models.domain import LLMModel, ModelStatus
+from app.core.config import MODELS_DIR
 
 logger = logging.getLogger(__name__)
-
-MODELS_DIR = "/home/luca/plam/data/models"
 
 class HuggingFaceDownloader:
     def __init__(self):
@@ -27,7 +26,7 @@ class HuggingFaceDownloader:
                 local_path = hf_hub_download(
                     repo_id=model.hf_repo_id,
                     filename=model.gguf_filename,
-                    local_dir=MODELS_DIR,
+                    local_dir=str(MODELS_DIR),
                     local_dir_use_symlinks=False
                 )
                 
