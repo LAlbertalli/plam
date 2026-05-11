@@ -6,7 +6,10 @@
   "python.testing.cwd": "${workspaceFolder}/backend",
   "python.defaultInterpreterPath": "${workspaceFolder}/backend/venv/bin/python",
   "jest.rootPath": "frontend",
-  "jest.showCoverageOnLoad": true,
+  "jest.runMode": {
+    "type": "on-demand",
+    "coverage": true
+  },
   "jest.jestCommandLine": "npm run test:coverage -- --watchAll=false",
   "coverage-gutters.coverageBaseDir": "**",
   "coverage-gutters.coverageFileNames": [
@@ -15,5 +18,8 @@
     "coverage.xml",
     "jacoco.xml",
     "coverage.cobertura.xml"
+  ],
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/backend"
   ]
 }
