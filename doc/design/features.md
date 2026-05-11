@@ -10,6 +10,7 @@ This document serves as a reference for all the features discussed and planned f
   - The manager should maintain the list of model running and evict models based on last utilization (except for the model running the orchestrator agent)
 - **Pre-Configured Sandboxing**: Execute generated Bash and Python scripts securely using the Docker Engine SDK inside ephemeral, network-isolated containers. These containers use pre-configured base images containing necessary dependencies (avoiding real-time network downloads).
   - The container configuration and build process should be fully configurable via the Web UI.
+- **Dynamic Container State**: The system relies on the Docker API as the absolute source of truth for model states (`running` vs `stopped`). The database only tracks transient states (`downloading`, `error`) while the REST API dynamically queries Docker to prevent split-brain OOM scenarios.
 - **PostgreSQL Foundation**: Use PostgreSQL (running in Docker) as the single source of truth for all configurations, state, and metrics. Managed via Alembic migrations.
 - **Scheduled & Event-Driven Tasks**: Trigger agents via external/internal events (webhooks) or on a schedule (e.g., cron jobs via APScheduler).
 

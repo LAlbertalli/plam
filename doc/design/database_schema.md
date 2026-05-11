@@ -11,7 +11,7 @@ This document details the PostgreSQL relational schema used as the foundation fo
 - `hf_repo_id` (String, Not Null): Hugging Face repository ID (e.g., "QuantFactory/Meta-Llama-3-8B-Instruct-GGUF").
 - `gguf_filename` (String, Not Null): The specific file to download.
 - `local_path` (String, Nullable): The absolute path to the GGUF file within the local shared Docker volume. Used to skip re-downloading.
-- `status` (Enum, Not Null, Default: "stopped"): Current state of the model. Values: `['stopped', 'running', 'downloading', 'error']`.
+- `status` (Enum, Not Null, Default: "stopped"): Current state of the model. Values: `['stopped', 'running', 'downloading', 'error']`. *Note: The database only durably tracks transient states (`downloading`, `error`). The `running` and `stopped` states are dynamically resolved at runtime by the API querying the Docker daemon to prevent split-brain issues.*
 - `ram_required_mb` (Integer, Not Null): Estimated system RAM needed for the model. Used by the Resource Manager for eviction and scheduling.
 - `context_size` (Integer, Not Null): Maximum token context.
 - `llamacpp_args` (JSONB, Nullable): Custom starting parameters passed to the llama.cpp server (e.g., `{"n_gpu_layers": -1, "n_predict": 1024}`).

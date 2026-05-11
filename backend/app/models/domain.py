@@ -4,13 +4,19 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
 import enum
+from enum import Enum
 from app.db.database import Base
 
-class ModelStatus(str, enum.Enum):
+class ModelStatus(str, Enum):
     stopped = "stopped"
     running = "running"
     downloading = "downloading"
     error = "error"
+
+class RecommendedTask(str, Enum):
+    coding = "Coding"
+    general = "General"
+    summarization = "Summarization"
 
 class RoleEnum(str, enum.Enum):
     user = "user"
@@ -32,6 +38,7 @@ class LLMModel(Base):
     parameter_count = Column(String, nullable=True)
     quantization = Column(String, nullable=True)
     recommended_tasks = Column(JSONB, nullable=True) # Array of strings stored as JSONB
+    llamacpp_version_hash = Column(String, nullable=True, default="ff52ee9")
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
 

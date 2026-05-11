@@ -6,6 +6,8 @@ PLAM is a powerful, local-first multi-agent system designed to orchestrate local
 
 ## Key Features
 
+> **Note:** The `llama.cpp` Docker configuration used in this project is optimized for running on a **NVIDIA DGX Spark**, leveraging `nvcr.io/nvidia/cuda` as the base image for maximum CUDA acceleration.
+
 - **Local-First AI**: Runs models completely locally using Dockerized `llama.cpp` containers.
 - **Intelligent Resource Management**: Monitors system RAM to dynamically spin up and evict model containers, ensuring at least 10GB of RAM is always free.
 - **Dual Proxy Architecture**: Employs a System Injection proxy for personas/tools and a Regex Rewriting proxy to normalize input/output formats across different LLM architectures.

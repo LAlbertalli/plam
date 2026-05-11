@@ -4,6 +4,9 @@
 .env
 .env.local
 
+# Data
+data/
+
 # Python
 __pycache__/
 *.py[cod]
