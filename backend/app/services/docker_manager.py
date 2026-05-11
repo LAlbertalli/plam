@@ -3,6 +3,7 @@ import time
 import logging
 import os
 import threading
+from app.core.config import DOCKER_DIR, MODELS_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ class DockerManager:
             return None
             
         image_tag = f"plam/llama.cpp:{version_hash}"
-        dockerfile_path = "/home/luca/plam/backend/docker"
+        dockerfile_path = str(DOCKER_DIR)
         
         try:
             self.client.images.get(image_tag)
@@ -73,7 +74,7 @@ class DockerManager:
         if not self.client:
             return None
             
-        models_dir = "/home/luca/plam/data/models"
+        models_dir = str(MODELS_DIR)
         model_path = os.path.join(models_dir, model.gguf_filename)
         
         if not os.path.exists(model_path):

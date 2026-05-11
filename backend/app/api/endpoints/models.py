@@ -8,10 +8,9 @@ from app.models.domain import LLMModel
 from app.models.schemas import LLMModelCreate, LLMModelUpdate, LLMModelResponse
 from app.services.huggingface_downloader import downloader
 from app.services.docker_manager import docker_manager
+from app.core.config import MODELS_DIR
 import docker
 import os
-
-MODELS_DIR = "/home/luca/plam/data/models"
 
 router = APIRouter()
 
@@ -42,7 +41,7 @@ def get_models(db: Session = Depends(get_db)):
         resp = LLMModelResponse.model_validate(m)
         resp.status = _get_dynamic_status(m.id, m.status)
         if resp.gguf_filename:
-            file_path = os.path.join(MODELS_DIR, resp.gguf_filename)
+            file_path = os.path.join(str(MODELS_DIR), resp.gguf_filename)
             resp.local_path = file_path if os.path.exists(file_path) else None
         responses.append(resp)
     return responses
@@ -56,7 +55,7 @@ def get_model(model_id: UUID, db: Session = Depends(get_db)):
     resp = LLMModelResponse.model_validate(model)
     resp.status = _get_dynamic_status(model.id, model.status)
     if resp.gguf_filename:
-        file_path = os.path.join(MODELS_DIR, resp.gguf_filename)
+        file_path = os.path.join(str(MODELS_DIR), resp.gguf_filename)
         resp.local_path = file_path if os.path.exists(file_path) else None
     return resp
 
@@ -133,7 +132,7 @@ def delete_model(model_id: UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Model not found")
         
     if db_model.gguf_filename:
-        file_path = os.path.join(MODELS_DIR, db_model.gguf_filename)
+        file_path = os.path.join(str(MODELS_DIR), db_model.gguf_filename)
         if os.path.exists(file_path):
             try:
                 os.remove(file_path)

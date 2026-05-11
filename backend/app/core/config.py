@@ -1,4 +1,12 @@
+import os
+from pathlib import Path
 from pydantic_settings import BaseSettings
+
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = BACKEND_DIR.parent
+DATA_DIR = BASE_DIR / "data"
+MODELS_DIR = DATA_DIR / "models"
+DOCKER_DIR = BACKEND_DIR / "docker"
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "PLAM API"
