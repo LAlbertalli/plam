@@ -1,7 +1,7 @@
 # Implementation Plan
 
 To ensure high quality, each phase begins with a **Design Refinement** step dedicated to finalizing data models, API contracts, and UI mockups before writing code. UI and Backend implementation will occur concurrently. 
-**Testing**: Every phase must conclude with writing unit and integration tests (`pytest` for backend, `Jest` for frontend) for all newly developed features before moving to the next phase.
+**Testing & Coverage**: Every phase must conclude with writing unit and integration tests (`pytest` with `pytest-cov` for backend, `Jest` with `--coverage` for frontend) for all newly developed features before moving to the next phase. Coverage should be rigorously checked and must never fall below 70%.
 
 ## Phase 1: Foundation & Project Setup
 - **Design Refinement**: Finalize the core database schema (Agents, Models, Memory) and REST API contracts. Wireframe the base UI layout.

@@ -29,29 +29,6 @@
       ],
       "cwd": "${workspaceFolder}/frontend",
       "console": "integratedTerminal"
-    },
-    {
-      "name": "Test: Backend (Pytest)",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "pytest",
-      "args": [
-        "tests"
-      ],
-      "cwd": "${workspaceFolder}/backend",
-      "python": "${workspaceFolder}/backend/venv/bin/python",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Test: Frontend (Jest)",
-      "type": "node",
-      "request": "launch",
-      "program": "${workspaceFolder}/frontend/node_modules/.bin/jest",
-      "args": [
-        "--runInBand"
-      ],
-      "cwd": "${workspaceFolder}/frontend",
-      "console": "integratedTerminal"
     }
   ],
   "compounds": [

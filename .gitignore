@@ -26,3 +26,7 @@ coverage/
 !.vscode/launch.json
 !.vscode/settings.json
 .idea/
+
+# Coverage
+.coverage
+coverage.xml

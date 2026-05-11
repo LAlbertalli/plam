@@ -11,8 +11,17 @@ const config: Config = {
   coverageProvider: 'v8',
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  coverageReporters: ['text', 'lcov', 'json-summary', 'clover'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+  },
+  coverageThreshold: {
+    global: {
+      branches: 70,
+      functions: 70,
+      lines: 70,
+      statements: 70,
+    },
   },
 }
  
