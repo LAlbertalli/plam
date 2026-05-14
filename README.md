@@ -4,6 +4,8 @@
 This is an AI project I'm building for myself to help me think deeper about agents and agents architecture. The inspiration comes from the idea of OpenClaw but I wanted to create something more in line with my beliefs and ideas.
 PLAM is a powerful, local-first multi-agent system designed to orchestrate local LLMs (via `llama.cpp`), manage hierarchical agents with complex memory systems, and execute code safely within isolated sandboxes.
 
+I'm optimizing this project to run on a **NVIDIA DGX Spark** using CUDA acceleration. It is highly likely that additional work will be required to work correctly on other architectures but this is not a priority right now.
+
 ## Key Features
 
 > **Note:** The `llama.cpp` Docker configuration used in this project is optimized for running on a **NVIDIA DGX Spark**, leveraging `nvcr.io/nvidia/cuda` as the base image for maximum CUDA acceleration.
