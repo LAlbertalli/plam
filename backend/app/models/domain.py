@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Boolean, Text, ForeignKey, DateTime, Enum as SQLEnum
+from sqlalchemy import Column, String, Integer, Boolean, Text, ForeignKey, DateTime, Enum as SQLEnum, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -17,6 +17,10 @@ class RecommendedTask(str, Enum):
     coding = "Coding"
     general = "General"
     summarization = "Summarization"
+
+class RegexChainEnum(str, enum.Enum):
+    input_chain = "input_chain"
+    output_chain = "output_chain"
 
 class RoleEnum(str, enum.Enum):
     user = "user"
@@ -41,6 +45,8 @@ class LLMModel(Base):
     llamacpp_version_hash = Column(String, nullable=True, default="ff52ee9")
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
+    
+    regex_rules = relationship("ModelRegexRule", back_populates="model", cascade="all, delete-orphan")
 
 class Agent(Base):
     __tablename__ = "agents"
@@ -102,3 +108,20 @@ class ShortTermMemory(Base):
     tool_calls = Column(JSONB, nullable=True)
     tool_outputs = Column(JSONB, nullable=True)
     timestamp = Column(DateTime, nullable=False, server_default=func.now())
+
+class ModelRegexRule(Base):
+    __tablename__ = "model_regex_rules"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_id = Column(UUID(as_uuid=True), ForeignKey("models.id"), nullable=False)
+    name = Column(String, nullable=False)
+    pattern = Column(String, nullable=False)
+    replacement = Column(String, nullable=False)
+    chain = Column(SQLEnum(RegexChainEnum), nullable=False)
+    order = Column(Integer, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    model = relationship("LLMModel", back_populates="regex_rules")
+
+    __table_args__ = (
+        UniqueConstraint('model_id', 'chain', 'order', name='uq_model_chain_order'),
+    )

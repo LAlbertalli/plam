@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { apiClient } from '@/lib/api';
 import ModelModal from '@/components/ModelModal';
 import styles from './page.module.css';
+
 
 interface LLMModel {
   id: string;
@@ -106,7 +108,9 @@ export default function ModelsPage() {
           <div key={model.id} className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardHeaderTop}>
-                <span className={styles.modelName}>{model.name}</span>
+                <Link href={`/models/${model.id}`} className={styles.modelNameLink}>
+                  {model.name}
+                </Link>
                 
                 <div className={styles.dropdown}>
                   <button 
@@ -118,6 +122,9 @@ export default function ModelsPage() {
                   {openDropdown === model.id && (
                     <div className={styles.dropdownMenu}>
                       <button className={styles.dropdownItem} onClick={() => openEdit(model)}>Edit</button>
+                      <Link href={`/models/${model.id}`} className={styles.dropdownLinkItem}>
+                        Configure Rules 🛡️
+                      </Link>
                       
                       {model.status === 'stopped' && (
                         <button className={styles.dropdownItem} onClick={() => handleStart(model.id)}>Start</button>

@@ -157,4 +157,30 @@
   cursor: not-allowed;
 }
 
+.modelNameLink {
+  text-decoration: none;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+  transition: color 0.2s ease-in-out;
+}
+
+.modelNameLink:hover {
+  color: #6366f1;
+}
+
+.dropdownLinkItem {
+  color: var(--foreground);
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: background 0.2s ease-in-out;
+  display: block;
+}
+
+.dropdownLinkItem:hover {
+  background: var(--border);
+}
+
+
 

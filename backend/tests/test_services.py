@@ -26,7 +26,9 @@ def test_resource_manager_can_allocate(mock_vm):
 
 @patch('app.services.docker_manager.os.path.exists')
 @patch('app.services.docker_manager.DockerManager.build_llama_image')
-def test_start_model(mock_build, mock_exists):
+@patch('app.services.resource_manager.resource_manager.can_allocate')
+def test_start_model(mock_can_allocate, mock_build, mock_exists):
+    mock_can_allocate.return_value = True
     mock_build.return_value = "plam/llama.cpp:test_hash"
     mock_exists.return_value = True
     
@@ -35,7 +37,8 @@ def test_start_model(mock_build, mock_exists):
         name="TestModel",
         llamacpp_version_hash="test_hash",
         gguf_filename="test.gguf",
-        context_size=2048
+        context_size=2048,
+        ram_required_mb=1000
     )
     
     with patch.object(docker_manager, 'client') as mock_client:
@@ -56,3 +59,145 @@ def test_stop_model():
         
         mock_client.containers.get.assert_called_once_with("plam-model-123")
         mock_container.stop.assert_called_once()
+
+@patch('app.services.docker_manager.os.path.exists')
+@patch('app.services.docker_manager.DockerManager.build_llama_image')
+@patch('app.services.resource_manager.resource_manager.can_allocate')
+@patch('app.services.docker_manager.time.sleep')
+def test_start_model_insufficient_ram_stops_other_models(mock_sleep, mock_can_allocate, mock_build, mock_exists):
+    # First check fails (insufficient RAM), second and third checks succeed (RAM freed after stopping other model)
+    mock_can_allocate.side_effect = [False, True, True]
+    mock_build.return_value = "plam/llama.cpp:test_hash"
+    mock_exists.return_value = True
+    
+    model = LLMModel(
+        id=uuid.uuid4(),
+        name="TestModel",
+        llamacpp_version_hash="test_hash",
+        gguf_filename="test.gguf",
+        context_size=2048,
+        ram_required_mb=2048
+    )
+    
+    other_model_id = uuid.uuid4()
+    with patch.object(docker_manager, 'client') as mock_client:
+        mock_other_container = MagicMock()
+        mock_other_container.name = f"plam-model-{other_model_id}"
+        mock_client.containers.list.return_value = [mock_other_container]
+        
+        mock_target_container = MagicMock()
+        mock_client.containers.run.return_value = mock_target_container
+        
+        # When get is called on container check, raise NotFound so it thinks it isn't running
+        import docker
+        mock_client.containers.get.side_effect = docker.errors.NotFound("not found")
+        
+        # Stop model mock
+        with patch.object(docker_manager, 'stop_model') as mock_stop:
+            container = docker_manager.start_model(model)
+            
+            # Assert that stop_model was called to evict the other running container
+            mock_stop.assert_called_once_with(str(other_model_id))
+            # Target container should successfully run
+            mock_client.containers.run.assert_called_once()
+            assert container == mock_target_container
+
+@patch('app.services.docker_manager.os.path.exists')
+@patch('app.services.docker_manager.DockerManager.build_llama_image')
+@patch('app.services.resource_manager.resource_manager.can_allocate')
+@patch('app.services.docker_manager.time.sleep')
+def test_start_model_skips_in_use_models_for_eviction(mock_sleep, mock_can_allocate, mock_build, mock_exists):
+    # Enforce insufficient RAM (keeps returning False)
+    mock_can_allocate.return_value = False
+    mock_build.return_value = "plam/llama.cpp:test_hash"
+    mock_exists.return_value = True
+    
+    other_model_id = uuid.uuid4()
+    
+    model = LLMModel(
+        id=uuid.uuid4(),
+        name="TestModel",
+        llamacpp_version_hash="test_hash",
+        gguf_filename="test.gguf",
+        context_size=2048,
+        ram_required_mb=2048
+    )
+    
+    # Mark the other model as in use
+    docker_manager.increment_active_stream(other_model_id)
+    
+    try:
+        with patch.object(docker_manager, 'client') as mock_client:
+            mock_other_container = MagicMock()
+            mock_other_container.name = f"plam-model-{other_model_id}"
+            mock_client.containers.list.return_value = [mock_other_container]
+            
+            # When get is called on container check, raise NotFound so it thinks it isn't running
+            import docker
+            mock_client.containers.get.side_effect = docker.errors.NotFound("not found")
+            
+            with patch.object(docker_manager, 'stop_model') as mock_stop:
+                # Should raise RuntimeError since the only running model is in use and cannot be stopped
+                with pytest.raises(RuntimeError) as exc_info:
+                    docker_manager.start_model(model)
+                
+                assert "All other active models are currently in use" in str(exc_info.value)
+                # Ensure stop_model was NEVER called for the in-use model
+                mock_stop.assert_not_called()
+    finally:
+        docker_manager.decrement_active_stream(other_model_id)
+
+from tests.conftest import TestingSessionLocal
+from app.services.orchestrator_service import orchestrator_service
+from app.models.domain import Session as ChatSession, Agent, LLMModel, ShortTermMemory
+
+@pytest.fixture
+def db_session():
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.query(ShortTermMemory).delete()
+        db.query(ChatSession).delete()
+        db.query(Agent).delete()
+        db.query(LLMModel).delete()
+        db.commit()
+        db.close()
+
+
+def test_parse_thought_and_save_response(db_session):
+    model = LLMModel(
+        id=uuid.uuid4(),
+        name="TestModel",
+        hf_repo_id="test/repo",
+        gguf_filename="test.gguf",
+        ram_required_mb=1000,
+        context_size=2048
+    )
+    db_session.add(model)
+    db_session.commit()
+
+    agent = Agent(
+        id=uuid.uuid4(),
+        name="TestAgent",
+        model_id=model.id,
+        system_prompt="Prompt"
+    )
+    db_session.add(agent)
+    db_session.commit()
+
+    session = ChatSession(
+        id=uuid.uuid4(),
+        title="Session"
+    )
+    db_session.add(session)
+    db_session.commit()
+
+    # 1. Test standard <thought> tags
+    raw_thought = "<thought>Thinking details</thought>This is the actual answer."
+    content, trace = orchestrator_service._parse_thought_and_save_response(
+        session.id, agent.id, 1, raw_thought, model.id, db_session
+    )
+    assert content == "This is the actual answer."
+    assert trace == "Thinking details"
+

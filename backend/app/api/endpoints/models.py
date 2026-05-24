@@ -116,6 +116,12 @@ def stop_model(model_id: UUID, db: Session = Depends(get_db)):
     if not model:
         raise HTTPException(status_code=404, detail="Model not found")
         
+    if docker_manager.is_model_in_use(model_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot stop model while it is currently in use by an active stream."
+        )
+        
     try:
         docker_manager.stop_model(model.id)
     except Exception as e:

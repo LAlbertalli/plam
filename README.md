@@ -63,6 +63,11 @@ The easiest way to run the full stack is via **VS Code**.
    - The FastAPI backend will run on `http://localhost:8000`
    - The Next.js frontend will run on `http://localhost:3000`
 
+## Limitations
+
+- **Single-Server Deployment (Process Shared Memory)**:
+  Because PLAM is designed as a personal, local tool running on a single server, concurrent LLM stream session counters are tracked using standard process Shared Memory (`multiprocessing.shared_memory.SharedMemory`) synchronized via workspace file locks. While this perfectly coordinates state across any number of local FastAPI worker processes (e.g. running multiple Uvicorn workers), scaling PLAM to a distributed multi-node architecture would require migrating this local shared memory layer to a distributed key-value store (like Redis) or database persistent registry.
+
 ## Documentation
 
 Comprehensive design documents can be found in the `doc/design` directory:

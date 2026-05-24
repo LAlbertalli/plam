@@ -61,15 +61,27 @@ This document details the PostgreSQL relational schema used as the foundation fo
 - `mcp_schema` (JSONB, Not Null): The JSON schema defining the inputs required for this tool.
 - `endpoint_url` (String, Nullable): Internal routing endpoint for the Orchestrator to trigger this tool.
 
+### 7. `model_regex_rules`
+**Description**: Stores search-and-replace regular expressions applied to model prompts and outputs.
+- `id` (UUID, Primary Key): Unique identifier.
+- `model_id` (UUID, Foreign Key referencing `models.id`, Not Null): The model these rules apply to.
+- `name` (String, Not Null): Explanatory name of the rule.
+- `pattern` (String, Not Null): The search regex pattern.
+- `replacement` (String, Not Null): The replacement text or template.
+- `chain` (Enum, Not Null): The processing stage. Values: `['input_chain', 'output_chain']`.
+- `order` (Integer, Not Null): The execution order.
+- `is_active` (Boolean, Not Null, Default: True): Enable/disable status.
+*Constraint*: A unique constraint on `(model_id, chain, order)` ensures deterministic sequential execution.
+
 ## Memory Models
 
-### 7. `sessions`
+### 8. `sessions`
 **Description**: A continuous conversation or task thread.
 - `id` (UUID, Primary Key).
 - `title` (String, Nullable).
 - `created_at` / `updated_at` (DateTime, Not Null).
 
-### 8. `short_term_memory`
+### 9. `short_term_memory`
 **Description**: Stores the chronological trace of messages within a session.
 - `id` (UUID, Primary Key).
 - `session_id` (UUID, Foreign Key referencing `sessions.id`, Not Null).
