@@ -36,6 +36,7 @@ class LLMModelResponse(LLMModelBase):
     id: UUID
     local_path: Optional[str] = None
     status: ModelStatus
+    error_message: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

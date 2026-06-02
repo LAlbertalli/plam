@@ -1,5 +1,6 @@
 import os
 import logging
+from typing import Optional
 from huggingface_hub import hf_hub_download
 from app.db.database import SessionLocal
 from app.models.domain import LLMModel, ModelStatus
@@ -10,6 +11,14 @@ logger = logging.getLogger(__name__)
 class HuggingFaceDownloader:
     def __init__(self):
         os.makedirs(MODELS_DIR, exist_ok=True)
+        self._errors = {}  # model_id (str) -> error_message (str)
+
+    def get_error(self, model_id) -> Optional[str]:
+        import uuid
+        return self._errors.get(str(model_id))
+
+    def clear_error(self, model_id):
+        self._errors.pop(str(model_id), None)
 
     def download_model(self, model_id: str):
         with SessionLocal() as db:
@@ -18,6 +27,7 @@ class HuggingFaceDownloader:
                 logger.error(f"Model {model_id} not found for download.")
                 return
 
+            self.clear_error(model_id)
             model.status = ModelStatus.downloading
             db.commit()
 
@@ -36,7 +46,9 @@ class HuggingFaceDownloader:
                 logger.info(f"Successfully downloaded {model.name} to {local_path}")
                 
             except Exception as e:
-                logger.error(f"Failed to download model {model.name}: {e}")
+                error_msg = str(e)
+                logger.error(f"Failed to download model {model.name}: {error_msg}")
+                self._errors[str(model_id)] = error_msg
                 model.status = ModelStatus.error
                 db.commit()
 

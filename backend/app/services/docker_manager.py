@@ -239,7 +239,7 @@ class DockerManager:
 
     def start_model(self, model, wait=True):
         if not self.client:
-            return None
+            raise RuntimeError("Docker daemon is not running or accessible. Please start Docker and try again.")
             
         container_name = f"plam-model-{model.id}"
         
@@ -249,8 +249,13 @@ class DockerManager:
             if container.status == "running":
                 logger.info(f"Model container {container_name} is already running.")
                 return container
-        except Exception:
+            else:
+                logger.info(f"Removing stopped container {container_name}...")
+                container.remove(force=True)
+        except docker.errors.NotFound:
             pass
+        except Exception as e:
+            logger.warning(f"Error checking/removing pre-existing container: {e}")
 
         models_dir = str(MODELS_DIR)
         model_path = os.path.join(models_dir, model.gguf_filename)
@@ -294,7 +299,7 @@ class DockerManager:
             volumes={models_dir: {'bind': '/models', 'mode': 'ro'}},
             ports={"8000/tcp": None},
             detach=True,
-            remove=True,
+            remove=False, # Changed to False so we can fetch logs if it crashes immediately
             device_requests=[docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])]
         )
         logger.info(f"Started model {model.name} in container {container_name}")
@@ -307,7 +312,33 @@ class DockerManager:
                     if container.status == "running":
                         port_data = container.attrs["NetworkSettings"]["Ports"].get("8000/tcp")
                         if port_data:
-                            break
+                            host_port = int(port_data[0]["HostPort"])
+                            import http.client
+                            try:
+                                conn = http.client.HTTPConnection("127.0.0.1", host_port, timeout=0.5)
+                                conn.request("GET", "/health")
+                                resp = conn.getresponse()
+                                resp.read()  # Read response body to clean up connection
+                                conn.close()
+                                break
+                            except Exception:
+                                pass
+                    elif container.status in ["exited", "dead"]:
+                        logs = container.logs(tail=15).decode("utf-8", errors="replace")
+                        logger.error(
+                            f"Model container failed to start and exited with status '{container.status}'.\n\n"
+                            f"Container Logs:\n{logs}"
+                        )
+                        try:
+                            container.remove(force=True)
+                        except Exception:
+                            pass
+                        raise RuntimeError(
+                            f"Model container failed to start and exited with status '{container.status}'.\n\n"
+                            f"Container Logs:\n{logs}"
+                        )
+                except RuntimeError:
+                    raise
                 except Exception:
                     pass
                 time.sleep(0.5)
@@ -322,7 +353,8 @@ class DockerManager:
         try:
             container = self.client.containers.get(container_name)
             container.stop()
-            logger.info(f"Stopped model container {container_name}")
+            container.remove(force=True)
+            logger.info(f"Stopped and removed model container {container_name}")
         except docker.errors.NotFound:
             pass
 

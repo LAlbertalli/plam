@@ -19,6 +19,7 @@ interface LLMModel {
   recommended_tasks?: string[];
   llamacpp_args?: Record<string, any>;
   local_path?: string | null;
+  error_message?: string | null;
 }
 
 interface RegexRule {
@@ -43,6 +44,10 @@ export default function ModelDetailPage({ params }: PageProps) {
   const [rules, setRules] = useState<RegexRule[]>([]);
   const [activeTab, setActiveTab] = useState<'input_chain' | 'output_chain'>('input_chain');
   const [loading, setLoading] = useState(true);
+
+  // Error Modal State
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorDetails, setErrorDetails] = useState('');
 
   // Form State for Regex Rule Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -107,6 +112,9 @@ export default function ModelDetailPage({ params }: PageProps) {
       setModel(updated);
     } catch (err) {
       console.error('Failed to start model:', err);
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred during startup.';
+      setErrorDetails(errorMessage);
+      setErrorModalOpen(true);
     }
   };
 
@@ -201,8 +209,9 @@ export default function ModelDetailPage({ params }: PageProps) {
       }
       setIsModalOpen(false);
       fetchRules();
-    } catch (err: any) {
-      alert(err.message || 'Failed to save regex rule. Ensure Order is unique within the chain.');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save regex rule. Ensure Order is unique within the chain.';
+      alert(errorMessage);
     }
   };
 
@@ -273,6 +282,16 @@ export default function ModelDetailPage({ params }: PageProps) {
           </div>
         </div>
       </header>
+
+      {model.status === 'error' && model.error_message && (
+        <div className={styles.downloadErrorCallout}>
+          <span className={styles.errorIcon}>⚠️</span>
+          <div className={styles.errorTextContainer}>
+            <strong className={styles.errorTitle}>Download Failed</strong>
+            <p className={styles.errorText}>{model.error_message}</p>
+          </div>
+        </div>
+      )}
 
       {/* Detail Dashboard Cards */}
       <section className={styles.metaDashboard}>
@@ -499,6 +518,20 @@ export default function ModelDetailPage({ params }: PageProps) {
                 <button type="submit" className={styles.submitBtn}>{editingRule ? 'Save Changes' : 'Create Rule'}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {errorModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.errorModal}>
+            <h2 className={styles.errorModalTitle}>⚠️ Startup Failed: {model.name}</h2>
+            <div className={styles.errorModalContent}>
+              <p className={styles.errorDescription}>The model container failed to start. Review the startup diagnostics and logs below:</p>
+              <pre className={styles.errorLogsPre}>{errorDetails}</pre>
+            </div>
+            <div className={styles.errorModalActions}>
+              <button className={styles.closeBtn} onClick={() => setErrorModalOpen(false)}>Close</button>
+            </div>
           </div>
         </div>
       )}

@@ -27,7 +27,8 @@ def test_resource_manager_can_allocate(mock_vm):
 @patch('app.services.docker_manager.os.path.exists')
 @patch('app.services.docker_manager.DockerManager.build_llama_image')
 @patch('app.services.resource_manager.resource_manager.can_allocate')
-def test_start_model(mock_can_allocate, mock_build, mock_exists):
+@patch('app.services.docker_manager.time.sleep')
+def test_start_model(mock_sleep, mock_can_allocate, mock_build, mock_exists):
     mock_can_allocate.return_value = True
     mock_build.return_value = "plam/llama.cpp:test_hash"
     mock_exists.return_value = True
@@ -44,6 +45,10 @@ def test_start_model(mock_can_allocate, mock_build, mock_exists):
     with patch.object(docker_manager, 'client') as mock_client:
         mock_container = MagicMock()
         mock_client.containers.run.return_value = mock_container
+        
+        # Mock get to raise NotFound
+        import docker
+        mock_client.containers.get.side_effect = docker.errors.NotFound("not found")
         
         container = docker_manager.start_model(model)
         
@@ -200,4 +205,107 @@ def test_parse_thought_and_save_response(db_session):
     )
     assert content == "This is the actual answer."
     assert trace == "Thinking details"
+
+def test_start_model_no_docker_client():
+    model = LLMModel(
+        id=uuid.uuid4(),
+        name="TestModel",
+        llamacpp_version_hash="test_hash",
+        gguf_filename="test.gguf",
+        context_size=2048,
+        ram_required_mb=1000
+    )
+    # Temporary mock client to None
+    with patch.object(docker_manager, 'client', None):
+        with pytest.raises(RuntimeError) as exc_info:
+            docker_manager.start_model(model)
+        assert "Docker daemon is not running or accessible" in str(exc_info.value)
+
+@patch('app.services.docker_manager.os.path.exists')
+@patch('app.services.docker_manager.DockerManager.build_llama_image')
+@patch('app.services.resource_manager.resource_manager.can_allocate')
+@patch('app.services.docker_manager.time.sleep')
+def test_start_model_container_crashes(mock_sleep, mock_can_allocate, mock_build, mock_exists):
+    mock_can_allocate.return_value = True
+    mock_build.return_value = "plam/llama.cpp:test_hash"
+    mock_exists.return_value = True
+    
+    model = LLMModel(
+        id=uuid.uuid4(),
+        name="TestModel",
+        llamacpp_version_hash="test_hash",
+        gguf_filename="test.gguf",
+        context_size=2048,
+        ram_required_mb=1000
+    )
+    
+    with patch.object(docker_manager, 'client') as mock_client:
+        mock_container = MagicMock()
+        mock_container.status = "exited"
+        mock_container.logs.return_value = b"CUDA error: out of memory"
+        mock_client.containers.run.return_value = mock_container
+        
+        # Mock get to raise NotFound
+        import docker
+        mock_client.containers.get.side_effect = docker.errors.NotFound("not found")
+        
+        with pytest.raises(RuntimeError) as exc_info:
+            docker_manager.start_model(model)
+            
+        assert "Model container failed to start and exited" in str(exc_info.value)
+        assert "CUDA error: out of memory" in str(exc_info.value)
+        mock_container.remove.assert_called_once_with(force=True)
+
+@patch('app.services.docker_manager.os.path.exists')
+@patch('app.services.docker_manager.DockerManager.build_llama_image')
+@patch('app.services.resource_manager.resource_manager.can_allocate')
+@patch('app.services.docker_manager.time.sleep')
+@patch('http.client.HTTPConnection')
+def test_start_model_success_with_http_check(mock_http_class, mock_sleep, mock_can_allocate, mock_build, mock_exists):
+    mock_can_allocate.return_value = True
+    mock_build.return_value = "plam/llama.cpp:test_hash"
+    mock_exists.return_value = True
+
+    model = LLMModel(
+        id=uuid.uuid4(),
+        name="TestModel",
+        llamacpp_version_hash="test_hash",
+        gguf_filename="test.gguf",
+        context_size=2048,
+        ram_required_mb=1000
+    )
+
+    with patch.object(docker_manager, 'client') as mock_client:
+        mock_container = MagicMock()
+        mock_container.status = "running"
+        mock_container.attrs = {
+            "NetworkSettings": {
+                "Ports": {
+                    "8000/tcp": [{"HostPort": "12345"}]
+                }
+            }
+        }
+        mock_client.containers.run.return_value = mock_container
+        
+        # Mock get to raise NotFound
+        import docker
+        mock_client.containers.get.side_effect = docker.errors.NotFound("not found")
+
+        # Mock HTTPConnection instance and response
+        mock_conn_instance = MagicMock()
+        mock_http_class.return_value = mock_conn_instance
+        
+        mock_response = MagicMock()
+        mock_conn_instance.getresponse.return_value = mock_response
+        
+        container = docker_manager.start_model(model)
+
+        assert container == mock_container
+        mock_http_class.assert_called_once_with("127.0.0.1", 12345, timeout=0.5)
+        mock_conn_instance.request.assert_called_once_with("GET", "/health")
+        mock_response.read.assert_called_once()
+        mock_conn_instance.close.assert_called_once()
+        mock_sleep.assert_not_called()
+
+
 

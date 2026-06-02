@@ -54,3 +54,26 @@ def test_delete_model(client):
     # Verify deletion
     get_res = client.get(f"/models/{model_id}")
     assert get_res.status_code == 404
+
+def test_download_model_error(client):
+    from app.services.huggingface_downloader import downloader
+    # First create a temporary model configuration
+    create_res = client.post(
+        "/models/",
+        json={
+            "name": "ErrorModel",
+            "hf_repo_id": "invalid/invalid-repo",
+            "gguf_filename": "invalid.gguf",
+            "ram_required_mb": 1000,
+            "context_size": 2048
+        }
+    )
+    assert create_res.status_code == 200
+    model_id = create_res.json()["id"]
+
+    # Mock the downloader to return an error for this model
+    with patch.object(downloader, 'get_error', return_value="Invalid repository name"):
+        get_res = client.get(f"/models/{model_id}")
+        assert get_res.status_code == 200
+        assert get_res.json()["error_message"] == "Invalid repository name"
+

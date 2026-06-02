@@ -21,6 +21,7 @@ interface LLMModel {
   recommended_tasks?: string[];
   llamacpp_args?: Record<string, any>;
   local_path?: string | null;
+  error_message?: string | null;
 }
 
 export default function ModelsPage() {
@@ -57,13 +58,21 @@ export default function ModelsPage() {
     }
   };
 
-  const handleStart = async (id: string) => {
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorDetails, setErrorDetails] = useState('');
+  const [errorModelName, setErrorModelName] = useState('');
+
+  const handleStart = async (id: string, modelName: string) => {
     setOpenDropdown(null);
     try {
       await apiClient.post(`/models/${id}/start`, {});
       fetchModels();
     } catch (error) {
       console.error('Failed to start model:', error);
+      setErrorModelName(modelName);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred during startup.';
+      setErrorDetails(errorMessage);
+      setErrorModalOpen(true);
     }
   };
 
@@ -127,7 +136,7 @@ export default function ModelsPage() {
                       </Link>
                       
                       {model.status === 'stopped' && (
-                        <button className={styles.dropdownItem} onClick={() => handleStart(model.id)}>Start</button>
+                        <button className={styles.dropdownItem} onClick={() => handleStart(model.id, model.name)}>Start</button>
                       )}
                       
                       {model.status === 'running' && (
@@ -157,6 +166,11 @@ export default function ModelsPage() {
                   <span key={task} className={`${styles.pill} ${styles.task}`}>{task}</span>
                 ))}
               </div>
+              {model.status === 'error' && model.error_message && (
+                <div className={styles.downloadError}>
+                  ⚠️ {model.error_message}
+                </div>
+              )}
             </div>
             
 
@@ -177,6 +191,20 @@ export default function ModelsPage() {
             fetchModels();
           }} 
         />
+      )}
+      {errorModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.errorModal}>
+            <h2 className={styles.errorModalTitle}>⚠️ Startup Failed: {errorModelName}</h2>
+            <div className={styles.errorModalContent}>
+              <p className={styles.errorDescription}>The model container failed to start. Review the startup diagnostics and logs below:</p>
+              <pre className={styles.errorLogsPre}>{errorDetails}</pre>
+            </div>
+            <div className={styles.errorModalActions}>
+              <button className={styles.closeBtn} onClick={() => setErrorModalOpen(false)}>Close</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

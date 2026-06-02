@@ -28,6 +28,15 @@ def _get_dynamic_status(model_id: UUID, current_status: str) -> str:
         pass
     return "stopped"
 
+def _prepare_response(model: LLMModel) -> LLMModelResponse:
+    resp = LLMModelResponse.model_validate(model)
+    resp.status = _get_dynamic_status(model.id, model.status)
+    if resp.gguf_filename:
+        file_path = os.path.join(str(MODELS_DIR), resp.gguf_filename)
+        resp.local_path = file_path if os.path.exists(file_path) else None
+    resp.error_message = downloader.get_error(model.id)
+    return resp
+
 @router.get("/tasks")
 def get_tasks():
     from app.models.domain import RecommendedTask
@@ -36,28 +45,14 @@ def get_tasks():
 @router.get("", response_model=List[LLMModelResponse])
 def get_models(db: Session = Depends(get_db)):
     models = db.query(LLMModel).all()
-    responses = []
-    for m in models:
-        resp = LLMModelResponse.model_validate(m)
-        resp.status = _get_dynamic_status(m.id, m.status)
-        if resp.gguf_filename:
-            file_path = os.path.join(str(MODELS_DIR), resp.gguf_filename)
-            resp.local_path = file_path if os.path.exists(file_path) else None
-        responses.append(resp)
-    return responses
+    return [_prepare_response(m) for m in models]
 
 @router.get("/{model_id}", response_model=LLMModelResponse)
 def get_model(model_id: UUID, db: Session = Depends(get_db)):
     model = db.query(LLMModel).filter(LLMModel.id == model_id).first()
     if not model:
         raise HTTPException(status_code=404, detail="Model not found")
-    
-    resp = LLMModelResponse.model_validate(model)
-    resp.status = _get_dynamic_status(model.id, model.status)
-    if resp.gguf_filename:
-        file_path = os.path.join(str(MODELS_DIR), resp.gguf_filename)
-        resp.local_path = file_path if os.path.exists(file_path) else None
-    return resp
+    return _prepare_response(model)
 
 @router.post("", response_model=LLMModelResponse)
 def create_model(model_in: LLMModelCreate, db: Session = Depends(get_db)):
@@ -65,7 +60,7 @@ def create_model(model_in: LLMModelCreate, db: Session = Depends(get_db)):
     db.add(db_model)
     db.commit()
     db.refresh(db_model)
-    return db_model
+    return _prepare_response(db_model)
 
 @router.put("/{model_id}", response_model=LLMModelResponse)
 def update_model(model_id: UUID, model_in: LLMModelUpdate, db: Session = Depends(get_db)):
@@ -79,7 +74,7 @@ def update_model(model_id: UUID, model_in: LLMModelUpdate, db: Session = Depends
         
     db.commit()
     db.refresh(db_model)
-    return db_model
+    return _prepare_response(db_model)
 
 @router.post("/{model_id}/download", response_model=LLMModelResponse)
 def download_model(model_id: UUID, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
@@ -92,7 +87,7 @@ def download_model(model_id: UUID, background_tasks: BackgroundTasks, db: Sessio
     db_model.status = "downloading"
     db.commit()
     db.refresh(db_model)
-    return db_model
+    return _prepare_response(db_model)
 
 @router.post("/{model_id}/start", response_model=LLMModelResponse)
 def start_model(model_id: UUID, db: Session = Depends(get_db)):
@@ -106,9 +101,7 @@ def start_model(model_id: UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
         
     db.refresh(model)
-    resp = LLMModelResponse.model_validate(model)
-    resp.status = _get_dynamic_status(model.id, model.status)
-    return resp
+    return _prepare_response(model)
 
 @router.post("/{model_id}/stop", response_model=LLMModelResponse)
 def stop_model(model_id: UUID, db: Session = Depends(get_db)):
@@ -127,9 +120,7 @@ def stop_model(model_id: UUID, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
         
-    resp = LLMModelResponse.model_validate(model)
-    resp.status = _get_dynamic_status(model.id, model.status)
-    return resp
+    return _prepare_response(model)
 
 @router.delete("/{model_id}")
 def delete_model(model_id: UUID, db: Session = Depends(get_db)):
