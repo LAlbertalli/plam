@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Qwen3.6-35B-A3B-Instruct",
+    "hf_repo_id": "unsloth/Qwen3.6-35B-A3B-GGUF",
+    "gguf_filename": "Qwen3.6-35B-A3B-Q4_K_XL.gguf",
+    "ram_required_mb": 24000,
+    "context_size": 262144,
+    "parameter_count": "35B",
+    "quantization": "Q4_K_XL",
+    "recommended_tasks": [
+      "General",
+      "Coding"
+    ],
+    "llamacpp_args": {
+      "n-gpu-layers": 99,
+      "parallel": 1,
+      "jinja": true,
+      "n": 65536
+    },
+    "llamacpp_version_hash": "1fd5f48"
+  }
+]

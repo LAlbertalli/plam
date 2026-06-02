@@ -2,6 +2,33 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "PLAM: Start Stack (via setup.sh)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/setup.sh",
+      "runtimeArgs": ["--config-dir", "default-config"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "PLAM: Clean & Start Stack (via setup.sh)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/setup.sh",
+      "runtimeArgs": ["--clean-db", "--config-dir", "default-config"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "PLAM: Stop Stack (via setup.sh)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/setup.sh",
+      "runtimeArgs": ["stop"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Backend: FastAPI",
       "type": "debugpy",
       "request": "launch",
@@ -16,6 +43,7 @@
       ],
       "cwd": "${workspaceFolder}/backend",
       "python": "${workspaceFolder}/backend/venv/bin/python",
+      "envFile": "${workspaceFolder}/backend/.env",
       "console": "integratedTerminal"
     },
     {

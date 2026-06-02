@@ -3,6 +3,8 @@
 *.log
 .env
 .env.local
+/log/
+.plam.pids
 
 # Data
 data/
