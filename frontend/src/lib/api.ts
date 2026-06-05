@@ -1,4 +1,28 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+let API_BASE_URL = "http://localhost:8000";
+
+if (typeof window !== "undefined") {
+  const envApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  try {
+    const url = new URL(envApiUrl);
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+      const currentHost = window.location.hostname;
+      if (currentHost !== "localhost" && currentHost !== "127.0.0.1") {
+        url.hostname = currentHost;
+        API_BASE_URL = url.origin;
+      } else {
+        API_BASE_URL = envApiUrl;
+      }
+    } else {
+      API_BASE_URL = envApiUrl;
+    }
+  } catch {
+    API_BASE_URL = envApiUrl;
+  }
+} else {
+  API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+}
+
+export { API_BASE_URL };
 
 const handleResponse = async (res: Response) => {
   if (!res.ok) {

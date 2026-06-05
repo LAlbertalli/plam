@@ -9,6 +9,8 @@ BACKEND_PORT="8000"
 CLEAN_DB=false
 CONFIG_DIR=""
 LOG_DIR="log"
+ALLOWED_ORIGINS=""
+
 
 # PID Tracking File
 PID_FILE=".plam.pids"
@@ -30,6 +32,7 @@ usage() {
   echo "  --clean-db              Stop, remove, and recreate the plam-postgres container."
   echo "  --config-dir PATH       Path to a configuration directory containing JSON files to seed database."
   echo "  --log-dir PATH          Directory to write server logs. Default: log."
+  echo "  --allowed-origins IPS   Comma-separated list of additional origins/IPs to allow in dev mode."
   echo "  -h, --help              Show this help message."
   exit 0
 }
@@ -72,6 +75,11 @@ while [ "$#" -gt 0 ]; do
       LOG_DIR="$2"
       shift 2
       ;;
+    --allowed-origins)
+      ALLOWED_ORIGINS="$2"
+      shift 2
+      ;;
+
     -h|--help)
       usage
       ;;
@@ -309,7 +317,11 @@ mkdir -p "$LOG_DIR"
 echo "POSTGRES_PORT=15432" > backend/.env
 echo "PORT=$FRONTEND_PORT" > frontend/.env.local
 echo "NEXT_PUBLIC_API_URL=http://localhost:$BACKEND_PORT" >> frontend/.env.local
+if [ -n "$ALLOWED_ORIGINS" ]; then
+  echo "ALLOWED_DEV_ORIGINS=$ALLOWED_ORIGINS" >> frontend/.env.local
+fi
 echo "[+] Settings loaded to backend/.env and frontend/.env.local"
+
 echo ""
 
 # 8. Building and Launching Servers
@@ -325,7 +337,7 @@ if [ "$MODE" = "dev" ]; then
 
   # Launch Next.js frontend (Dev mode)
   cd frontend
-  nohup env NEXT_PUBLIC_API_URL="http://localhost:$BACKEND_PORT" PORT="$FRONTEND_PORT" npm run dev -- -p "$FRONTEND_PORT" > "../$LOG_DIR/frontend.log" 2>&1 &
+  nohup env NEXT_PUBLIC_API_URL="http://localhost:$BACKEND_PORT" PORT="$FRONTEND_PORT" npm run dev -- -p "$FRONTEND_PORT" -H 0.0.0.0 > "../$LOG_DIR/frontend.log" 2>&1 &
   FRONTEND_PID=$!
   cd ..
 else
@@ -341,7 +353,7 @@ else
   NEXT_PUBLIC_API_URL="http://localhost:$BACKEND_PORT" npm run build
   
   # Launch Next.js frontend (Release mode)
-  nohup env PORT="$FRONTEND_PORT" npm run start -- -p "$FRONTEND_PORT" > "../$LOG_DIR/frontend.log" 2>&1 &
+  nohup env PORT="$FRONTEND_PORT" npm run start -- -p "$FRONTEND_PORT" -H 0.0.0.0 > "../$LOG_DIR/frontend.log" 2>&1 &
   FRONTEND_PID=$!
   cd ..
 fi

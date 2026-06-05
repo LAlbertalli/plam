@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import styles from './ResourceMonitor.module.css';
 
+import { API_BASE_URL } from '@/lib/api';
+
 interface Metrics {
   cpu_percent: number;
   ram_total_mb: number;
@@ -16,9 +18,8 @@ export default function ResourceMonitor() {
   useEffect(() => {
     // Determine the WS URL (handling local dev vs production, custom ports, etc.)
     let wsUrl = "ws://localhost:8000/ws/metrics";
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     try {
-      const url = new URL(apiBase);
+      const url = new URL(API_BASE_URL);
       const wsProtocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
       wsUrl = `${wsProtocol}//${url.host}/ws/metrics`;
     } catch (e) {
