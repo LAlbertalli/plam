@@ -256,6 +256,15 @@ if [ "$CLEAN_DB" = true ]; then
   docker stop plam-postgres >/dev/null 2>&1 || true
   docker rm plam-postgres >/dev/null 2>&1 || true
   echo "[+] Existing plam-postgres container removed."
+  
+  # Clean up any leftover model containers
+  MODEL_CONTAINERS=$(docker ps -a --filter "name=plam-model" --format "{{.ID}}" || true)
+  if [ -n "$MODEL_CONTAINERS" ]; then
+    echo "Stopping and removing leftover plam-model containers..."
+    docker stop $MODEL_CONTAINERS >/dev/null 2>&1 || true
+    docker rm $MODEL_CONTAINERS >/dev/null 2>&1 || true
+    echo "[+] Leftover model containers removed."
+  fi
 fi
 
 # Check database container state and start if necessary
