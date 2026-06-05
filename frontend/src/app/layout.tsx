@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 
-import Sidebar from "@/components/Sidebar";
+import LayoutWrapper from "@/components/LayoutWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,16 +30,16 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-row bg-[#0b0c10] text-[#e2e8f0] overflow-x-hidden">
+      <body className="min-h-full bg-[#0b0c10] text-[#e2e8f0] overflow-x-hidden">
         <Suspense fallback={<div style={{ width: '260px', background: 'rgba(15, 17, 23, 0.85)', height: '100vh' }} />}>
-          <Sidebar />
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
         </Suspense>
-        <main className="flex-1 min-h-screen pl-[260px] flex flex-col relative">
-          {children}
-        </main>
       </body>
     </html>
   );
 }
+
 
 

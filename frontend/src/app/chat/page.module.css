@@ -419,3 +419,22 @@
   }
 }
 
+@media (max-width: 768px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 18px 16px 18px 70px !important; /* Clears the burger button vertically and horizontally */
+  }
+
+  .topbarLeft {
+    flex: 1 1 auto;
+    min-width: 150px;
+  }
+
+  .agentSelectContainer {
+    flex: 1 1 auto;
+    justify-content: flex-start;
+  }
+}
+
+

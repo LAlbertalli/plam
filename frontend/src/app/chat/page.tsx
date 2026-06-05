@@ -128,20 +128,7 @@ function ChatPageContent() {
     }
   };
 
-  const handleDeleteSession = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    if (!confirm('Are you sure you want to delete this session?')) return;
-    try {
-      await apiClient.delete(`/chat/sessions/${id}`);
-      setSessions(prev => prev.filter(s => s.id !== id));
-      if (currentSessionId === id) {
-        router.push('/chat');
-      }
-    } catch (err) {
-      console.error('Failed to delete session:', err);
 
-    }
-  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,32 +222,6 @@ function ChatPageContent() {
 
   return (
     <div className={styles.chatLayout}>
-      {/* Session Sidebar */}
-      <aside className={styles.sidebar}>
-        <button className={styles.newChatBtn} onClick={handleCreateSession}>
-          ➕ New Chat
-        </button>
-        <div className={styles.sessionList}>
-          {sessions.map(s => (
-            <div 
-              key={s.id} 
-              className={`${styles.sessionItem} ${currentSessionId === s.id ? styles.active : ''}`}
-              onClick={() => router.push(`/chat?session_id=${s.id}`)}
-            >
-
-              <span className={styles.sessionIcon}>💬</span>
-              <span className={styles.sessionTitle}>{s.title || 'Discussion'}</span>
-              <button 
-                className={styles.deleteSessionBtn}
-                onClick={(e) => handleDeleteSession(e, s.id)}
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-        </div>
-      </aside>
-
       {/* Main Conversation Pane */}
       <div className={styles.chatArea}>
         {currentSessionId ? (
@@ -268,7 +229,6 @@ function ChatPageContent() {
             {/* Topbar selectors */}
             <div className={styles.topbar}>
               <div className={styles.topbarLeft}>
-                <span className={styles.activeSessionIcon}>💬</span>
                 <span className={styles.activeSessionTitle}>
                   {sessions.find(s => s.id === currentSessionId)?.title || 'Discussion'}
                 </span>

@@ -12,13 +12,67 @@
   padding: 24px;
   z-index: 100;
   box-sizing: border-box;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar:not(.collapsed) {
+    transform: translateX(0);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.sidebar.collapsed {
+  width: 60px;
+  padding: 24px 8px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  width: 100%;
 }
 
 .logo {
   font-size: 28px;
   font-weight: 800;
-  margin-bottom: 40px;
   letter-spacing: 1.5px;
+  transition: opacity 0.2s ease, max-width 0.2s ease;
+  white-space: nowrap;
+}
+
+.collapsed .logo {
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  margin: 0;
+}
+
+.closeButton {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
 }
 
 .logoGradient {
@@ -26,6 +80,7 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
 
 .nav {
   display: flex;
@@ -65,6 +120,33 @@
 
 .name {
   font-size: 15px;
+  transition: opacity 0.2s ease-in-out, max-width 0.2s ease-in-out;
+  white-space: nowrap;
+}
+
+.collapsed .name {
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.collapsed .navLink {
+  justify-content: center;
+  padding: 14px 0;
+  gap: 0;
+}
+
+.collapsed .navLink:hover {
+  transform: none; /* Disable horizontal transform hover effect when collapsed to prevent shifting outside the 60px bounds */
+}
+
+.collapsed .subMenu {
+  display: none;
+}
+
+.collapsed .resourceMonitorContainer {
+  display: none;
 }
 
 .spacer {
@@ -84,6 +166,13 @@
   margin-top: 6px;
 }
 
+.subMenuItemContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
 .subMenuItem {
   font-size: 0.82rem;
   color: #64748b;
@@ -94,9 +183,32 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 170px;
+  max-width: 140px; /* Adjusted slightly smaller to accommodate the ✕ button */
   display: block;
+  flex: 1;
 }
+
+.deleteSubMenuItemBtn {
+  background: transparent;
+  border: none;
+  color: #475569;
+  cursor: pointer;
+  position: absolute;
+  right: 6px;
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+  padding: 4px;
+}
+
+.subMenuItemContainer:hover .deleteSubMenuItemBtn {
+  opacity: 1;
+}
+
+.deleteSubMenuItemBtn:hover {
+  color: #f87171;
+}
+
 
 .subMenuItem:hover {
   color: #ffffff;
@@ -130,4 +242,5 @@
   color: #ffffff;
   transform: translateX(2px);
 }
+
 

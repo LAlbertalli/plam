@@ -1,0 +1,131 @@
+.layoutContainer {
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  background-color: #0b0c10;
+  color: #e2e8f0;
+}
+
+.mainContent {
+  flex: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Default SSR / Non-hydrated responsive styles */
+@media (min-width: 769px) {
+  .mainContent {
+    padding-left: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    padding-left: 0;
+  }
+}
+
+/* Client Hydrated Override states */
+.expanded .mainContent {
+  padding-left: 260px;
+}
+
+.collapsed .mainContent {
+  padding-left: 60px;
+}
+
+@media (max-width: 768px) {
+  .expanded .mainContent {
+    padding-left: 0;
+  }
+  .collapsed .mainContent {
+    padding-left: 0;
+  }
+}
+
+/* Backdrop Overlay for mobile screens */
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 95;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Floating Burger Menu Button */
+.floatingBurger {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(15, 17, 23, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 110; /* Set above sidebar's z-index (100) */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+}
+
+.floatingBurger:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.floatingBurger:active {
+  transform: scale(0.95);
+}
+
+@media (min-width: 769px) {
+  /* On desktop, hide the burger unless the layout is collapsed */
+  .layoutContainer:not(.collapsed) .floatingBurger {
+    display: none;
+  }
+  
+  /* If collapsed on desktop, center the burger inside the 60px bar */
+  .collapsed .floatingBurger {
+    position: fixed; /* Fixed relative to viewport to lock in place with fixed sidebar */
+    top: 24px;
+    left: 9px; /* Centered in 60px width: (60 - 42) / 2 = 9 */
+    background: transparent;
+    border: 1px solid transparent;
+    box-shadow: none;
+    z-index: 110;
+  }
+
+  .collapsed .floatingBurger:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: none;
+  }
+}

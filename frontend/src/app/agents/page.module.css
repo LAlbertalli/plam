@@ -311,3 +311,20 @@
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
 }
+
+@media (max-width: 768px) {
+  .container {
+    padding: 2rem 1rem;
+  }
+  
+  .header {
+    padding-left: 52px;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .title {
+    font-size: clamp(1.3rem, 5vw, 1.75rem);
+  }
+}
+

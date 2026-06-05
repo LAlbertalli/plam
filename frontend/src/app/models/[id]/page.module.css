@@ -692,4 +692,20 @@
   word-break: break-word;
 }
 
+@media (max-width: 768px) {
+  .container {
+    padding: 2rem 1rem;
+    gap: 1.5rem;
+  }
+  
+  .header {
+    padding-left: 52px;
+  }
+  
+  .title {
+    font-size: clamp(1.3rem, 5vw, 1.75rem);
+  }
+}
+
+
 

@@ -12,10 +12,19 @@ interface ChatSession {
   title?: string;
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  isCollapsed?: boolean | null;
+  toggleSidebar?: () => void;
+}
+
+export default function Sidebar({
+  isCollapsed = false,
+  toggleSidebar = () => {}
+}: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+
   
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const currentSessionId = searchParams.get('session_id');
@@ -23,7 +32,7 @@ export default function Sidebar() {
   const fetchSessions = async () => {
     try {
       const data = await apiClient.get('/chat/sessions');
-      setSessions(data.slice(0, 5)); // show top 5 recent chats
+      setSessions(data); // show all recent chats
     } catch (err) {
       console.error('Failed to fetch sessions in Sidebar:', err);
     }
@@ -37,6 +46,21 @@ export default function Sidebar() {
     const interval = setInterval(fetchSessions, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleDeleteSession = async (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to delete this discussion?')) return;
+    try {
+      await apiClient.delete(`/chat/sessions/${id}`);
+      fetchSessions();
+      if (currentSessionId === id) {
+        router.push('/chat');
+      }
+    } catch (err) {
+      console.error('Failed to delete session from Sidebar:', err);
+    }
+  };
 
   const handleNewChat = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -54,22 +78,40 @@ export default function Sidebar() {
   const navItems = [
     { name: 'Models', href: '/models', icon: '🤖' },
     { name: 'Agents', href: '/agents', icon: '🕵️' },
-    { name: 'Chat', href: '/chat', icon: '💬' }
+    { 
+      name: 'Chat', 
+      href: sessions.length > 0 ? `/chat?session_id=${sessions[0].id}` : '/chat', 
+      icon: '💬' 
+    }
   ];
 
   return (
-    <aside className={styles.sidebar}>
-      <div className={styles.logo}>
-        <span className={styles.logoGradient}>PLAM</span>
+    <aside className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}>
+      <div className={styles.header}>
+        <div className={styles.logo}>
+          <span className={styles.logoGradient}>PLAM</span>
+        </div>
+        {!isCollapsed && (
+          <button 
+            className={styles.closeButton} 
+            onClick={toggleSidebar}
+            aria-label="Collapse Sidebar"
+          >
+            ❮
+          </button>
+        )}
       </div>
       <nav className={styles.nav}>
         {navItems.map(item => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const isActive = item.name === 'Chat'
+            ? pathname.startsWith('/chat')
+            : pathname === item.href || pathname.startsWith(item.href + '/');
           return (
-            <div key={item.href} className={styles.navGroup}>
+            <div key={item.name} className={styles.navGroup}>
               <Link 
                 href={item.href}
                 className={`${styles.navLink} ${isActive ? styles.active : ''}`}
+                title={isCollapsed ? item.name : undefined}
               >
                 <span className={styles.icon}>{item.icon}</span>
                 <span className={styles.name}>{item.name}</span>
@@ -80,17 +122,28 @@ export default function Sidebar() {
                   <button onClick={handleNewChat} className={styles.subMenuItemBtn}>
                     ➕ New Chat
                   </button>
-                  {sessions.map(s => {
+                   {sessions.map(s => {
                     const isSessionActive = pathname.startsWith('/chat') && currentSessionId === s.id;
                     return (
-                      <Link
-                        key={s.id}
-                        href={`/chat?session_id=${s.id}`}
-                        className={`${styles.subMenuItem} ${isSessionActive ? styles.subActive : ''}`}
-                        title={s.title || 'Discussion'}
-                      >
-                        💬 {s.title || 'Discussion'}
-                      </Link>
+                      <div key={s.id} className={styles.subMenuItemContainer}>
+                        <Link
+                          href={`/chat?session_id=${s.id}`}
+                          className={`${styles.subMenuItem} ${isSessionActive ? styles.subActive : ''}`}
+                          title={s.title || 'Discussion'}
+                        >
+                          💬 {s.title || 'Discussion'}
+                        </Link>
+                        {!isCollapsed && (
+                          <button 
+                            className={styles.deleteSubMenuItemBtn}
+                            onClick={(e) => handleDeleteSession(e, s.id)}
+                            title="Delete Discussion"
+                            aria-label="Delete Discussion"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -100,9 +153,12 @@ export default function Sidebar() {
         })}
       </nav>
       <div className={styles.spacer} />
-      <ResourceMonitor />
+      <div className={styles.resourceMonitorContainer}>
+        <ResourceMonitor />
+      </div>
     </aside>
   );
 }
+
 
 

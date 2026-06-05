@@ -84,44 +84,14 @@ describe('ChatPage', () => {
     expect(screen.getByText('Loading chat interface...')).toBeInTheDocument();
   });
 
-  it('renders and displays sessions and active chat', async () => {
+  it('renders and displays active chat content', async () => {
     render(<ChatPage />);
 
     await waitFor(() => {
-      expect(screen.getAllByText('Discussion 1')[0]).toBeInTheDocument();
       expect(screen.getByText('Talking to')).toBeInTheDocument();
       expect(screen.getByText('Python Expert')).toBeInTheDocument();
       expect(screen.getByText('Hello agent')).toBeInTheDocument();
       expect(screen.getByText('Hi user')).toBeInTheDocument();
-    });
-  });
-
-  it('creates new session when clicking New Chat', async () => {
-    (apiClient.post as jest.Mock).mockResolvedValue({ id: 'session-2', title: 'New Discussion', created_at: '2026-05-23' });
-    render(<ChatPage />);
-    
-    await waitFor(() => expect(screen.getAllByText('Discussion 1')[0]).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText('➕ New Chat'));
-
-    await waitFor(() => {
-      expect(apiClient.post).toHaveBeenCalledWith('/chat/sessions', { title: 'New Discussion' });
-    });
-  });
-
-  it('deletes session when clicking delete button and confirming', async () => {
-    mockConfirm.mockReturnValue(true);
-    (apiClient.delete as jest.Mock).mockResolvedValue({});
-    render(<ChatPage />);
-    
-    await waitFor(() => expect(screen.getAllByText('Discussion 1')[0]).toBeInTheDocument());
-
-    // Click '✕' button next to Discussion 1
-    fireEvent.click(screen.getByText('✕'));
-
-    expect(mockConfirm).toHaveBeenCalled();
-    await waitFor(() => {
-      expect(apiClient.delete).toHaveBeenCalledWith('/chat/sessions/session-1');
     });
   });
 
