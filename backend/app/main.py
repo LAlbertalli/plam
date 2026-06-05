@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.services.docker_manager import docker_manager
-from app.api.endpoints import models, metrics, agents, proxies, chat
+from app.api.v1 import api_router as v1_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -26,11 +26,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(models.router, prefix="/models", tags=["models"])
-app.include_router(metrics.router, tags=["metrics"])
-app.include_router(agents.router, prefix="/agents", tags=["agents"])
-app.include_router(proxies.router, prefix="/proxies", tags=["proxies"])
-app.include_router(chat.router, prefix="/chat", tags=["chat"])
+app.include_router(v1_router, prefix="/api/v1")
+
 @app.get("/")
 def read_root():
     return {"status": "ok", "message": "PLAM Backend running"}
+

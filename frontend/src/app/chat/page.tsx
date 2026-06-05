@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { apiClient } from '@/lib/api';
+import { apiClient, API_BASE_URL } from '@/lib/api';
 import styles from './page.module.css';
+
 
 
 interface Agent {
@@ -164,11 +165,10 @@ function ChatPageContent() {
       timestamp: new Date().toISOString()
     };
     setMessages(prev => [...prev, tempUserMsg]);
-
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     
     try {
       const response = await fetch(`${API_BASE_URL}/chat/sessions/${currentSessionId}/message`, {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ agent_id: selectedAgentId, content: userMsg })

@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 def test_create_model(client):
     response = client.post(
-        "/models/",
+        "/api/v1/models/",
         json={
             "name": "Llama-3-8B",
             "hf_repo_id": "meta-llama/Meta-Llama-3-8B-Instruct-GGUF",
@@ -18,18 +18,18 @@ def test_create_model(client):
     assert data["status"] == "stopped"
 
 def test_get_models(client):
-    response = client.get("/models/")
+    response = client.get("/api/v1/models/")
     assert response.status_code == 200
     assert len(response.json()) > 0
 
 def test_update_model(client):
     # First get the model
-    response = client.get("/models/")
+    response = client.get("/api/v1/models/")
     model_id = response.json()[0]["id"]
     
     # Update it
     update_res = client.put(
-        f"/models/{model_id}",
+        f"/api/v1/models/{model_id}",
         json={"context_size": 16384}
     )
     assert update_res.status_code == 200
@@ -37,29 +37,29 @@ def test_update_model(client):
 
 @patch('app.api.endpoints.models.downloader.download_model')
 def test_download_model(mock_download, client):
-    response = client.get("/models/")
+    response = client.get("/api/v1/models/")
     model_id = response.json()[0]["id"]
     
-    dl_res = client.post(f"/models/{model_id}/download")
+    dl_res = client.post(f"/api/v1/models/{model_id}/download")
     assert dl_res.status_code == 200
     assert dl_res.json()["status"] == "downloading"
 
 def test_delete_model(client):
-    response = client.get("/models/")
+    response = client.get("/api/v1/models/")
     model_id = response.json()[0]["id"]
     
-    del_res = client.delete(f"/models/{model_id}")
+    del_res = client.delete(f"/api/v1/models/{model_id}")
     assert del_res.status_code == 200
     
     # Verify deletion
-    get_res = client.get(f"/models/{model_id}")
+    get_res = client.get(f"/api/v1/models/{model_id}")
     assert get_res.status_code == 404
 
 def test_download_model_error(client):
     from app.services.huggingface_downloader import downloader
     # First create a temporary model configuration
     create_res = client.post(
-        "/models/",
+        "/api/v1/models/",
         json={
             "name": "ErrorModel",
             "hf_repo_id": "invalid/invalid-repo",
@@ -73,7 +73,7 @@ def test_download_model_error(client):
 
     # Mock the downloader to return an error for this model
     with patch.object(downloader, 'get_error', return_value="Invalid repository name"):
-        get_res = client.get(f"/models/{model_id}")
+        get_res = client.get(f"/api/v1/models/{model_id}")
         assert get_res.status_code == 200
         assert get_res.json()["error_message"] == "Invalid repository name"
 

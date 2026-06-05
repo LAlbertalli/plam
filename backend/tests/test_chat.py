@@ -64,7 +64,7 @@ def test_send_message_streaming(mock_run_chat_stream, client, mock_db_data):
     agent_id = mock_db_data["agent_id"]
     
     response = client.post(
-        f"/chat/sessions/{session_id}/message",
+        f"/api/v1/chat/sessions/{session_id}/message",
         json={
             "agent_id": str(agent_id),
             "content": "Hi agent",
@@ -98,7 +98,7 @@ def test_send_message_non_streaming(mock_run_chat_stream, client, mock_db_data):
     agent_id = mock_db_data["agent_id"]
     
     response = client.post(
-        f"/chat/sessions/{session_id}/message",
+        f"/api/v1/chat/sessions/{session_id}/message",
         json={
             "agent_id": str(agent_id),
             "content": "Hi agent",
@@ -130,7 +130,7 @@ def test_send_message_non_streaming_error(mock_run_chat_stream, client, mock_db_
     agent_id = mock_db_data["agent_id"]
     
     response = client.post(
-        f"/chat/sessions/{session_id}/message",
+        f"/api/v1/chat/sessions/{session_id}/message",
         json={
             "agent_id": str(agent_id),
             "content": "Hi agent",
@@ -146,35 +146,35 @@ def test_send_message_non_streaming_error(mock_run_chat_stream, client, mock_db_
     assert "Some mock error occurred" in chunks[0]
 
 def test_get_sessions(client, mock_db_data):
-    response = client.get("/chat/sessions")
+    response = client.get("/api/v1/chat/sessions")
     assert response.status_code == 200
     data = response.json()
     assert any(s["id"] == str(mock_db_data["session_id"]) for s in data)
 
 def test_get_session_by_id(client, mock_db_data):
     session_id = mock_db_data["session_id"]
-    response = client.get(f"/chat/sessions/{session_id}")
+    response = client.get(f"/api/v1/chat/sessions/{session_id}")
     assert response.status_code == 200
     assert response.json()["id"] == str(session_id)
 
 def test_get_session_by_id_not_found(client):
-    response = client.get(f"/chat/sessions/{uuid4()}")
+    response = client.get(f"/api/v1/chat/sessions/{uuid4()}")
     assert response.status_code == 404
     assert response.json()["detail"] == "Session not found"
 
 def test_get_session_history(client, mock_db_data):
     session_id = mock_db_data["session_id"]
-    response = client.get(f"/chat/sessions/{session_id}/history")
+    response = client.get(f"/api/v1/chat/sessions/{session_id}/history")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
 def test_get_session_history_not_found(client):
-    response = client.get(f"/chat/sessions/{uuid4()}/history")
+    response = client.get(f"/api/v1/chat/sessions/{uuid4()}/history")
     assert response.status_code == 404
 
 def test_create_session(client):
     response = client.post(
-        "/chat/sessions",
+        "/api/v1/chat/sessions",
         json={"title": "Created Session"}
     )
     assert response.status_code == 201
@@ -184,22 +184,22 @@ def test_create_session(client):
 
 def test_delete_session(client, mock_db_data):
     session_id = mock_db_data["session_id"]
-    response = client.delete(f"/chat/sessions/{session_id}")
+    response = client.delete(f"/api/v1/chat/sessions/{session_id}")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
     
     # Try to get it again, should fail
-    response_get = client.get(f"/chat/sessions/{session_id}")
+    response_get = client.get(f"/api/v1/chat/sessions/{session_id}")
     assert response_get.status_code == 404
 
 def test_delete_session_not_found(client):
-    response = client.delete(f"/chat/sessions/{uuid4()}")
+    response = client.delete(f"/api/v1/chat/sessions/{uuid4()}")
     assert response.status_code == 404
 
 @patch('app.api.endpoints.chat.orchestrator_service.run_chat_stream')
 def test_send_message_session_not_found(mock_run_chat_stream, client, mock_db_data):
     response = client.post(
-        f"/chat/sessions/{uuid4()}/message",
+        f"/api/v1/chat/sessions/{uuid4()}/message",
         json={
             "agent_id": str(mock_db_data["agent_id"]),
             "content": "Hi",
@@ -220,7 +220,7 @@ def test_send_message_downloading_error(mock_run_chat_stream, client, mock_db_da
     agent_id = mock_db_data["agent_id"]
     
     response = client.post(
-        f"/chat/sessions/{session_id}/message",
+        f"/api/v1/chat/sessions/{session_id}/message",
         json={
             "agent_id": str(agent_id),
             "content": "Hi agent",
@@ -246,7 +246,7 @@ def test_send_message_json_decode_error(mock_run_chat_stream, client, mock_db_da
     agent_id = mock_db_data["agent_id"]
     
     response = client.post(
-        f"/chat/sessions/{session_id}/message",
+        f"/api/v1/chat/sessions/{session_id}/message",
         json={
             "agent_id": str(agent_id),
             "content": "Hi agent",

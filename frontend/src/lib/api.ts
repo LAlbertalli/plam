@@ -1,14 +1,14 @@
-let API_BASE_URL = "http://localhost:8000";
+let API_BASE_URL = "http://localhost:8000/api/v1";
 
 if (typeof window !== "undefined") {
-  const envApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const envApiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000") + "/api/v1";
   try {
     const url = new URL(envApiUrl);
     if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
       const currentHost = window.location.hostname;
       if (currentHost !== "localhost" && currentHost !== "127.0.0.1") {
         url.hostname = currentHost;
-        API_BASE_URL = url.origin;
+        API_BASE_URL = url.origin + "/api/v1";
       } else {
         API_BASE_URL = envApiUrl;
       }
@@ -19,7 +19,7 @@ if (typeof window !== "undefined") {
     API_BASE_URL = envApiUrl;
   }
 } else {
-  API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000") + "/api/v1";
 }
 
 export { API_BASE_URL };

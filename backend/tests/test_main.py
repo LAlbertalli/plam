@@ -26,7 +26,7 @@ def test_get_db_coverage():
         pass
 
 def test_websocket_metrics():
-    with client.websocket_connect("/ws/metrics") as websocket:
+    with client.websocket_connect("/api/v1/ws/metrics") as websocket:
         data = websocket.receive_text()
         import json
         metrics = json.loads(data)
