@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import styles from './ResourceMonitor.module.css';
 
-import { API_BASE_URL } from '@/lib/api';
-
 interface Metrics {
   cpu_percent: number;
   ram_total_mb: number;
