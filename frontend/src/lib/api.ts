@@ -8,6 +8,12 @@ if (typeof window !== "undefined") {
       const currentHost = window.location.hostname;
       if (currentHost !== "localhost" && currentHost !== "127.0.0.1") {
         url.hostname = currentHost;
+        if (window.location.port === "") {
+          url.port = "";
+        }
+        if (window.location.protocol === "https:") {
+          url.protocol = "https:";
+        }
         API_BASE_URL = url.origin + "/api/v1";
       } else {
         API_BASE_URL = envApiUrl;
@@ -38,7 +44,7 @@ const handleResponse = async (res: Response) => {
       try {
         const text = await res.text();
         if (text) errorDetail = text;
-      } catch {}
+      } catch { }
     }
     throw new Error(errorDetail);
   }

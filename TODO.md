@@ -10,6 +10,7 @@ This document tracks identified issues, technical debt, and architectural improv
 - [ ] **Database Volume**: The PostgreSQL container should have its data volume mounted to `plam/data/db` on the host to ensure data persistence across container restarts.
 - [ ] **Active Model Scarcity Queue (On-Hold Requests)**: Implement a request queueing and scheduling system inside `OrchestratorService`. When a request is made for a model that is currently not available (e.g., because system RAM is exhausted and all other active models are locked and currently in use), the chat or autonomous agent request should be placed "on hold". The client should receive a status stream message (e.g., `"LLM Server busy. Request queued..."`), and the orchestrator should automatically wake up and resume the chat stream once an active stream terminates and frees up the required system RAM.
 - [ ] **Robust Error Logging**: Add better logging and user-facing error reporting for model startup failures (e.g. what to display when download fails, and what to show when Docker fails to start).
+- [ ] **Remove hack in api.ts** Currently implement a check on protocoll and port to detect when served over a Cloudflared tunnel and configure the API URL correctly. Change to be served in a better way
 
 
 ## Architectural Lifecycle
