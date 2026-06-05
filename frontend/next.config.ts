@@ -3,7 +3,11 @@ import type { NextConfig } from "next";
 const parseAllowedOrigins = () => {
   const origins = process.env.ALLOWED_DEV_ORIGINS;
   if (!origins) return [];
-  return origins.split(",").map(o => o.trim()).filter(Boolean);
+  const list = origins.split(",").map(o => o.trim()).filter(Boolean);
+  const port = process.env.PORT || "3000";
+  // Add both IP-only and IP:port combinations for robustness
+  const withPorts = list.map(o => o.includes(":") ? o : `${o}:${port}`);
+  return [...list, ...withPorts];
 };
 
 const nextConfig: NextConfig = {

@@ -1,34 +1,6 @@
-let API_BASE_URL = "http://localhost:8000/api/v1";
-
-if (typeof window !== "undefined") {
-  const envApiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000") + "/api/v1";
-  try {
-    const url = new URL(envApiUrl);
-    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
-      const currentHost = window.location.hostname;
-      if (currentHost !== "localhost" && currentHost !== "127.0.0.1") {
-        url.hostname = currentHost;
-        if (window.location.port === "") {
-          url.port = "";
-        }
-        if (window.location.protocol === "https:") {
-          url.protocol = "https:";
-        }
-        API_BASE_URL = url.origin + "/api/v1";
-      } else {
-        API_BASE_URL = envApiUrl;
-      }
-    } else {
-      API_BASE_URL = envApiUrl;
-    }
-  } catch {
-    API_BASE_URL = envApiUrl;
-  }
-} else {
-  API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000") + "/api/v1";
-}
-
-export { API_BASE_URL };
+export const API_BASE_URL = typeof window !== "undefined"
+  ? "/api/v1"
+  : `http://localhost:${process.env.PORT || 3000}/api/v1`;
 
 const handleResponse = async (res: Response) => {
   if (!res.ok) {

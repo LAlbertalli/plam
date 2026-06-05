@@ -16,18 +16,9 @@ export default function ResourceMonitor() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
 
   useEffect(() => {
-    // Determine the WS URL (handling local dev vs production, custom ports, etc.)
-    let wsUrl = "ws://localhost:8000/api/v1/ws/metrics";
-    try {
-      const url = new URL(API_BASE_URL);
-      const wsProtocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-      wsUrl = `${wsProtocol}//${url.host}${url.pathname}/ws/metrics`;
-    } catch (e) {
-      console.error("Failed to parse NEXT_PUBLIC_API_URL for WebSocket, falling back", e);
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.hostname;
-      wsUrl = `${protocol}//${host}:8000/api/v1/ws/metrics`;
-    }
+    // Determine the WS URL relative to the current frontend host/port
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}/api/v1/ws/metrics`;
 
     const ws = new WebSocket(wsUrl);
 
