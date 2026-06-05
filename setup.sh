@@ -93,7 +93,7 @@ done
 # Helper function to check if port is available
 check_port() {
   local port=$1
-  if python3 -c "import socket; s = socket.socket(); s.bind(('127.0.0.1', $port))" >/dev/null 2>&1; then
+  if python3 -c "import socket; s = socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); s.bind(('127.0.0.1', $port))" >/dev/null 2>&1; then
     return 0 # Free
   else
     return 1 # In use
