@@ -107,18 +107,72 @@ class PackageResponse(PackageBase):
     id: UUID
     model_config = ConfigDict(from_attributes=True)
 
+# MCPServer schemas
+class MCPServerBase(BaseModel):
+    name: str
+    connection_type: str
+    command: Optional[str] = None
+    args: Optional[List[Any]] = None
+    env_encrypted: Optional[Dict[str, str]] = None
+    sse_url: Optional[str] = None
+    sse_headers_encrypted: Optional[Dict[str, str]] = None
+    tools_hash: Optional[str] = None
+    is_active: bool = True
+
+class MCPServerCreate(MCPServerBase):
+    pass
+
+class MCPServerUpdate(BaseModel):
+    name: Optional[str] = None
+    connection_type: Optional[str] = None
+    command: Optional[str] = None
+    args: Optional[List[Any]] = None
+    env_encrypted: Optional[Dict[str, str]] = None
+    sse_url: Optional[str] = None
+    sse_headers_encrypted: Optional[Dict[str, str]] = None
+    tools_hash: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class MCPServerResponse(MCPServerBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+# MCPOAuthToken schemas
+class MCPOAuthTokenBase(BaseModel):
+    mcp_server_id: UUID
+    access_token_encrypted: str
+    refresh_token_encrypted: Optional[str] = None
+    expires_at: Optional[datetime] = None
+    scopes: Optional[List[Any]] = None
+
+class MCPOAuthTokenCreate(MCPOAuthTokenBase):
+    pass
+
+class MCPOAuthTokenResponse(MCPOAuthTokenBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
 # Skill schemas
 class SkillBase(BaseModel):
     package_id: UUID
     name: str
     front_matter: Dict[str, Any]
     description: str
+    source_path: Optional[str] = None
+    content_hash: Optional[str] = None
+    is_inferred: bool = False
 
 class SkillCreate(SkillBase):
     pass
 
 class SkillResponse(SkillBase):
     id: UUID
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
 
 # MCPTool schemas
@@ -128,13 +182,19 @@ class MCPToolBase(BaseModel):
     description: str
     mcp_schema: Dict[str, Any]
     endpoint_url: Optional[str] = None
+    mcp_server_id: Optional[UUID] = None
+    content_hash: Optional[str] = None
+    is_active: bool = True
 
 class MCPToolCreate(MCPToolBase):
     pass
 
 class MCPToolResponse(MCPToolBase):
     id: UUID
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
+
 
 # Session schemas
 class SessionBase(BaseModel):

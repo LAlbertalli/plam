@@ -72,6 +72,37 @@ class AgentPackage(Base):
     agent_id = Column(UUID(as_uuid=True), ForeignKey("agents.id"), primary_key=True)
     package_id = Column(UUID(as_uuid=True), ForeignKey("packages.id"), primary_key=True)
 
+class MCPServer(Base):
+    __tablename__ = "mcp_servers"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, unique=True, nullable=False)
+    connection_type = Column(String, nullable=False)  # "stdio" or "sse"
+    command = Column(String, nullable=True)           # for stdio connections
+    args = Column(JSONB, nullable=True)              # for stdio connections
+    env_encrypted = Column(JSONB, nullable=True)      # Encrypted environment variables
+    sse_url = Column(String, nullable=True)           # for SSE connections
+    sse_headers_encrypted = Column(JSONB, nullable=True) # Encrypted custom headers (e.g. static bearer tokens)
+    tools_hash = Column(String, nullable=True)        # SHA-256 tools hash to detect changes
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
+
+    tools = relationship("MCPTool", back_populates="mcp_server", cascade="all, delete-orphan")
+    oauth_token = relationship("MCPOAuthToken", back_populates="mcp_server", uselist=False, cascade="all, delete-orphan")
+
+class MCPOAuthToken(Base):
+    __tablename__ = "mcp_oauth_tokens"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mcp_server_id = Column(UUID(as_uuid=True), ForeignKey("mcp_servers.id"), unique=True, nullable=False)
+    access_token_encrypted = Column(Text, nullable=False)
+    refresh_token_encrypted = Column(Text, nullable=True)
+    expires_at = Column(DateTime, nullable=True)
+    scopes = Column(JSONB, nullable=True)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
+
+    mcp_server = relationship("MCPServer", back_populates="oauth_token")
+
 class Skill(Base):
     __tablename__ = "skills"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -79,6 +110,11 @@ class Skill(Base):
     name = Column(String, unique=True, nullable=False)
     front_matter = Column(JSONB, nullable=False)
     description = Column(Text, nullable=False)
+    source_path = Column(String, nullable=True)
+    content_hash = Column(String, nullable=True)
+    is_inferred = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
 
 class MCPTool(Base):
     __tablename__ = "mcp_tools"
@@ -88,6 +124,14 @@ class MCPTool(Base):
     description = Column(Text, nullable=False)
     mcp_schema = Column(JSONB, nullable=False)
     endpoint_url = Column(String, nullable=True)
+    mcp_server_id = Column(UUID(as_uuid=True), ForeignKey("mcp_servers.id"), nullable=True)
+    content_hash = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
+
+    mcp_server = relationship("MCPServer", back_populates="tools")
+
 
 class Session(Base):
     __tablename__ = "sessions"
