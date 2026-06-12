@@ -6,7 +6,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "${workspaceFolder}/setup.sh",
-      "runtimeArgs": ["--config-dir", "default-config"],
+      "runtimeArgs": [
+        "--config-dir",
+        "default-config"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -15,7 +18,11 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "${workspaceFolder}/setup.sh",
-      "runtimeArgs": ["--clean-db", "--config-dir", "default-config"],
+      "runtimeArgs": [
+        "--clean-db",
+        "--config-dir",
+        "default-config"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -24,12 +31,14 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "${workspaceFolder}/setup.sh",
-      "runtimeArgs": ["stop"],
+      "runtimeArgs": [
+        "stop"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
     {
-      "name": "Backend: FastAPI",
+      "name": "Backend: FastAPI - Do not use!, use the setup.sh script instead.",
       "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
@@ -47,7 +56,7 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "Frontend: Next.js",
+      "name": "Frontend: Next.js - Do not use!, use the setup.sh script instead.",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
@@ -57,14 +66,42 @@
       ],
       "cwd": "${workspaceFolder}/frontend",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "Backend: Debug Pytest Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "purpose": [
+        "debug-test"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/backend",
+      "env": {
+        "PYTHONPATH": "."
+      }
+    },
+    {
+      "name": "Frontend: Debug Jest Tests",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "test",
+        "--",
+        "--runInBand",
+        "--watchAll=false"
+      ],
+      "console": "integratedTerminal"
     }
   ],
   "compounds": [
     {
-      "name": "Start PLAM (Full Stack)",
+      "name": "Start PLAM (Full Stack) - Do not use!, use the setup.sh script instead.",
       "configurations": [
-        "Backend: FastAPI",
-        "Frontend: Next.js"
+        "Backend: FastAPI - Do not use!, use the setup.sh script instead.",
+        "Frontend: Next.js - Do not use!, use the setup.sh script instead."
       ],
       "stopAll": true
     }

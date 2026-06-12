@@ -32,3 +32,6 @@ coverage/
 # Coverage
 .coverage
 coverage.xml
+coverage.json
+**/coverage.json
+**/coverage.xml
