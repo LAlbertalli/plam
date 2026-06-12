@@ -35,3 +35,8 @@ This document outlines the testing frameworks and strategies to ensure the relia
 
 ## 3. Continuous Integration
 All tests (`pytest`, `Jest`, and `Playwright`) should be integrated into a GitHub Action (or similar CI/CD pipeline) to run automatically on every pull request, ensuring no regressions are introduced into the local manager.
+
+## 4. Code Coverage Requirements
+We enforce strict branch + statement coverage metrics:
+* **Backend**: Coverage is validated **per file** (minimum 70% for standard modules, 80% for security modules like [crypto_helper.py](file:///home/luca/plam/backend/app/core/crypto_helper.py), and custom exemptions for infrastructure components). This is validated by running the custom checking script `utilities/check_coverage.py` on the generated `coverage.json` report.
+* **Frontend**: Validated **per file** (minimum 70% for TS/TSX modules under `src/`, excluding server layout `src/app/layout.tsx`). This is validated by running `npm run test:coverage` which generates a `coverage-summary.json` report and executes the custom checker script `utilities/check_coverage.js`.

@@ -80,4 +80,76 @@ describe('Sidebar', () => {
       expect(apiClient.delete).toHaveBeenCalledWith('/chat/sessions/session-1');
     });
   });
+
+  it('does not delete session when confirmation is cancelled', async () => {
+    mockConfirm.mockReturnValue(false);
+    render(<Sidebar />);
+    
+    await waitFor(() => expect(screen.getByText('💬 Discussion 1')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText('✕'));
+
+    expect(mockConfirm).toHaveBeenCalled();
+    expect(apiClient.delete).not.toHaveBeenCalled();
+  });
+
+  it('logs error when deleting session fails', async () => {
+    mockConfirm.mockReturnValue(true);
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    (apiClient.delete as jest.Mock).mockRejectedValue(new Error('Delete session failed'));
+    render(<Sidebar />);
+    
+    await waitFor(() => expect(screen.getByText('💬 Discussion 1')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText('✕'));
+
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to delete session from Sidebar:', expect.any(Error));
+    });
+    consoleSpy.mockRestore();
+  });
+
+  it('logs error when creating new session fails', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    (apiClient.post as jest.Mock).mockRejectedValue(new Error('Create session failed'));
+    render(<Sidebar />);
+    
+    await waitFor(() => expect(screen.getByText('💬 Discussion 1')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText('➕ New Chat'));
+
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to create session from Sidebar:', expect.any(Error));
+    });
+    consoleSpy.mockRestore();
+  });
+
+  it('logs error when fetching sessions fails', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    (apiClient.get as jest.Mock).mockRejectedValue(new Error('Fetch sessions failed'));
+    render(<Sidebar />);
+    
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to fetch sessions in Sidebar:', expect.any(Error));
+    });
+    consoleSpy.mockRestore();
+  });
+
+  it('renders collapsed state correctly and triggers toggle button', async () => {
+    const mockToggle = jest.fn();
+    render(<Sidebar isCollapsed={true} toggleSidebar={mockToggle} />);
+    
+    expect(screen.getByText('PLAM')).toBeInTheDocument();
+    // In collapsed mode, the close button '❮' is hidden
+    expect(screen.queryByText('❮')).not.toBeInTheDocument();
+  });
+
+  it('renders expanded state and triggers toggle button', async () => {
+    const mockToggle = jest.fn();
+    render(<Sidebar isCollapsed={false} toggleSidebar={mockToggle} />);
+    
+    const toggleButton = screen.getByLabelText('Collapse Sidebar');
+    fireEvent.click(toggleButton);
+    expect(mockToggle).toHaveBeenCalled();
+  });
 });

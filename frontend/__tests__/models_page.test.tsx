@@ -155,6 +155,142 @@ describe('ModelsPage', () => {
     expect(apiClient.delete).toHaveBeenCalledWith('/models/1');
   });
 
+  it('triggers delete but does nothing if not confirmed', async () => {
+    mockConfirm.mockReturnValue(false);
+    render(<ModelsPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Actions ▾')).toHaveLength(2);
+    });
+
+    fireEvent.click(screen.getAllByText('Actions ▾')[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText('Delete')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Delete'));
+    expect(mockConfirm).toHaveBeenCalled();
+    expect(apiClient.delete).not.toHaveBeenCalled();
+  });
+
+  it('shows error modal when model fails to start', async () => {
+    (apiClient.post as jest.Mock).mockRejectedValue(new Error('GPU Out of Memory'));
+    render(<ModelsPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Actions ▾')).toHaveLength(2);
+    });
+
+    fireEvent.click(screen.getAllByText('Actions ▾')[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText('Start')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Start'));
+
+    await waitFor(() => {
+      expect(screen.getByText('⚠️ Startup Failed: Llama-3-8B')).toBeInTheDocument();
+      expect(screen.getByText('GPU Out of Memory')).toBeInTheDocument();
+    });
+
+    // Close error modal
+    fireEvent.click(screen.getByText('Close'));
+    await waitFor(() => {
+      expect(screen.queryByText('⚠️ Startup Failed: Llama-3-8B')).not.toBeInTheDocument();
+    });
+  });
+
+  it('handles start rejection with non-Error object', async () => {
+    (apiClient.post as jest.Mock).mockRejectedValue('String error');
+    render(<ModelsPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Actions ▾')).toHaveLength(2);
+    });
+
+    fireEvent.click(screen.getAllByText('Actions ▾')[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText('Start')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Start'));
+
+    await waitFor(() => {
+      expect(screen.getByText('⚠️ Startup Failed: Llama-3-8B')).toBeInTheDocument();
+      expect(screen.getByText('An unknown error occurred during startup.')).toBeInTheDocument();
+    });
+  });
+
+  it('logs error when stop fails', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    (apiClient.post as jest.Mock).mockRejectedValue(new Error('Stop failed'));
+    render(<ModelsPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Actions ▾')).toHaveLength(2);
+    });
+
+    fireEvent.click(screen.getAllByText('Actions ▾')[1]);
+
+    await waitFor(() => {
+      expect(screen.getByText('Stop')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Stop'));
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to stop model:', expect.any(Error));
+    });
+    consoleSpy.mockRestore();
+  });
+
+  it('logs error when download fails', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    (apiClient.post as jest.Mock).mockRejectedValue(new Error('Download failed'));
+    render(<ModelsPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Actions ▾')).toHaveLength(2);
+    });
+
+    fireEvent.click(screen.getAllByText('Actions ▾')[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText('Download')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Download'));
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to start download:', expect.any(Error));
+    });
+    consoleSpy.mockRestore();
+  });
+
+  it('logs error when delete fails', async () => {
+    mockConfirm.mockReturnValue(true);
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    (apiClient.delete as jest.Mock).mockRejectedValue(new Error('Delete failed'));
+    render(<ModelsPage />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Actions ▾')).toHaveLength(2);
+    });
+
+    fireEvent.click(screen.getAllByText('Actions ▾')[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText('Delete')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Delete'));
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to delete model:', expect.any(Error));
+    });
+    consoleSpy.mockRestore();
+  });
+
   it('opens Modal when clicking Add a model', async () => {
     render(<ModelsPage />);
     

@@ -80,12 +80,26 @@ All primary system documentation is stored inside the [doc/design/](file:///home
 
 You MUST adhere to these rules for any code modification:
 
-### A. The 70% Code Coverage Rule
-*   **Keep Coverage at 70% or Higher**: Both the backend and frontend enforce a strict coverage threshold of **70%**.
-*   **Enforcement**:
-    *   Backend coverage is defined in [pytest.ini](file:///home/luca/plam/backend/pytest.ini) via `--cov-fail-under=70`.
-    *   Frontend coverage is defined in [jest.config.ts](file:///home/luca/plam/frontend/jest.config.ts) under `coverageThreshold`.
-*   **Action Required**: If your changes add new code blocks, routes, or components, you **MUST** write corresponding test cases to ensure the overall test coverage stays above 70%. If the coverage falls below 70%, the test suite will fail.
+### A. The Code Coverage Rules
+*   **Coverage Thresholds**: Both the backend and frontend enforce strict coverage constraints.
+*   **Backend Enforcement (Per-File)**:
+    *   The backend enforces coverage **per file** instead of a global average.
+    *   No file under `backend/app/` can have less than **70%** coverage unless explicitly exempted.
+    *   Critical security files (like [crypto_helper.py](file:///home/luca/plam/backend/app/core/crypto_helper.py)) have a higher minimum of **80%** coverage.
+    *   Enforced by running `pytest --cov-report=json` followed by the custom check script:
+        ```bash
+        cd backend
+        env PYTHONPATH=. venv/bin/pytest && venv/bin/python utilities/check_coverage.py
+        ```
+*   **Frontend Enforcement (Per-File)**:
+    *   The frontend enforces coverage **per file** instead of a global average.
+    *   No file under `frontend/src/` (excluding server layout `src/app/layout.tsx`) can have less than **70%** coverage for statements, branches, functions, and lines.
+    *   Enforced by running `npm run test:coverage` which executes jest and runs the custom checker:
+        ```bash
+        cd frontend
+        npm run test:coverage
+        ```
+*   **Action Required**: If your changes add or modify source files under `backend/app/` or `frontend/src/`, you **MUST** write corresponding tests so that the individual file meets or exceeds its required coverage threshold.
 
 ### B. Run Tests Before Finishing
 *   **Always Run Tests**: You must run the tests to verify correctness and coverage **before** finalizing your implementation and declaring success.
@@ -102,10 +116,10 @@ You MUST adhere to these rules for any code modification:
 Use the following commands to test, lint, and run the applications.
 
 ### Backend (Python)
-- Run backend tests (with coverage):
+- Run backend tests and check per-file coverage:
   ```bash
   cd backend
-  env PYTHONPATH=. venv/bin/pytest
+  env PYTHONPATH=. venv/bin/pytest && venv/bin/python utilities/check_coverage.py
   ```
 - Generate database migrations:
   ```bash
