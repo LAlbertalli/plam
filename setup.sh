@@ -321,6 +321,12 @@ if [ -n "$CONFIG_DIR" ]; then
 fi
 
 # 7. Environment Injection and Preparation
+echo "Unlocking symmetric encryption key..."
+if ! local_key=$(PYTHONPATH=backend backend/venv/bin/python backend/utilities/unlock_key.py); then
+  echo "[-] Error: Failed to unlock encryption key. Aborting startup." >&2
+  exit 1
+fi
+
 echo "Writing environment settings..."
 mkdir -p "$LOG_DIR"
 echo "POSTGRES_PORT=15432" > backend/.env
@@ -340,7 +346,7 @@ echo "Logs will be written to: $LOG_DIR/backend.log & $LOG_DIR/frontend.log"
 if [ "$MODE" = "dev" ]; then
   # Launch FastAPI backend (Reload mode)
   cd backend
-  nohup env PYTHONPATH=. venv/bin/uvicorn app.main:app --reload --host 0.0.0.0 --port "$BACKEND_PORT" > "../$LOG_DIR/backend.log" 2>&1 &
+  nohup env PYTHONPATH=. PLAM_CREDENTIAL_KEY="$local_key" venv/bin/uvicorn app.main:app --reload --host 0.0.0.0 --port "$BACKEND_PORT" > "../$LOG_DIR/backend.log" 2>&1 &
   BACKEND_PID=$!
   cd ..
 
@@ -352,7 +358,7 @@ if [ "$MODE" = "dev" ]; then
 else
   # Release mode (No reload)
   cd backend
-  nohup env PYTHONPATH=. venv/bin/uvicorn app.main:app --host 0.0.0.0 --port "$BACKEND_PORT" > "../$LOG_DIR/backend.log" 2>&1 &
+  nohup env PYTHONPATH=. PLAM_CREDENTIAL_KEY="$local_key" venv/bin/uvicorn app.main:app --host 0.0.0.0 --port "$BACKEND_PORT" > "../$LOG_DIR/backend.log" 2>&1 &
   BACKEND_PID=$!
   cd ..
 
