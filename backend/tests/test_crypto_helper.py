@@ -142,11 +142,19 @@ def test_generate_new_key_on_first_run():
             assert decrypted_key == generated_key
 
 def test_unlock_no_tty_raises_error():
-    with patch("app.core.crypto_helper.os.path.exists", return_value=True), \
-         patch("keyring.get_password", return_value=None), \
-         patch("app.core.crypto_helper.sys.stdin.isatty", return_value=False):
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        tmp.write(b"a" * 20)
+        tmp_name = tmp.name
         
-        with pytest.raises(RuntimeError) as exc_info:
-            app.core.crypto_helper._unlock_or_generate_key_interactive()
-        assert "no interactive terminal (TTY) is available" in str(exc_info.value)
+    try:
+        with patch("app.core.crypto_helper.KEY_FILE", tmp_name), \
+             patch("keyring.get_password", return_value=None), \
+             patch("app.core.crypto_helper.sys.stdin.isatty", return_value=False):
+            
+            with pytest.raises(RuntimeError) as exc_info:
+                app.core.crypto_helper._unlock_or_generate_key_interactive()
+            assert "no interactive terminal (TTY) is available" in str(exc_info.value)
+    finally:
+        os.unlink(tmp_name)
+
 
